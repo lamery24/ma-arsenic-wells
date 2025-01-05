@@ -10,3 +10,5 @@ Output Tables are stored in //Tables
 Output Figures are stored in Data//Figures
 
 All Data used is stored in //Data
+
+Two files which were too large were removed from the data folder: ma_resi_parcels_pws.csv and sm_wells_as.csv
