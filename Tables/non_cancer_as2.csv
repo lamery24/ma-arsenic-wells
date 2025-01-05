@@ -1,0 +1,10 @@
+Method;Well Assignment Method;Total Population Served;Population Over 1 HQ Current RfD;Population Over 1 HQ Proposed RfD
+CWS Average;SDWIS;6,449,663;0 (0\%);124,297 (1.9\%)
+Interpolated;MassDEP DWP Well Viewer;199,902;110 (0.1\%);64,668 (32.3\%)
+Interpolated;MassDEP PWS Service Area Maps;637,871;457 (0.1\%);212,221 (33.3\%)
+Town Average;MassDEP DWP Well Viewer;199,902;2,688 (1.3\%);45,483 (22.8\%)
+Town Average;MassDEP PWS Service Area Maps;637,871;7,059 (1.1\%);140,769 (22.1\%)
+County Average;MassDEP DWP Well Viewer;199,902;0 (0\%);108,524 (54.3\%)
+County Average;MassDEP PWS Service Area Maps;637,871;0 (0\%);335,828 (52.6\%)
+Region Average;MassDEP DWP Well Viewer;199,902;0 (0\%);96,521 (48.3\%)
+Region Average;MassDEP PWS Service Area Maps;637,871;0 (0\%);294,245 (46.1\%)

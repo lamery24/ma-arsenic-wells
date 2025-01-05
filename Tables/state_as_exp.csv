@@ -1,0 +1,7 @@
+Method,assignment_method,Population,Children Cancer Cases,Adult Cancer Cases,Cases per Million,Population Exposed to 10+ ug/L,Cancer Cases from Drinking Water Risk
+Interpolated,Well Viewer,199902,0.5,2.9,17,6957,15
+Interpolated,PWS Service Maps,637871,1.6,9.1,16.8,6957,15
+Town Average,Well Viewer,199902,0.6,3.5,20.5,37807,18.3
+Town Average,PWS Service Maps,637871,2,11.1,20.5,37807,18.3
+CWS Average,Well Viewer,6449663,6.5,35.4,6.5,0,113.3
+CWS Average,PWS Service Maps,6449663,6.5,35.4,6.5,0,113.3

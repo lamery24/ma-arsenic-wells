@@ -1,0 +1,55 @@
+method;threshold;assignment_method;pop;cumulative_cancer_cases;per_million_cancer_cases;percent
+CWS Average;1;MassDEP DWP Well Viewer;6,449,646;279;43.3;100
+CWS Average;5;MassDEP DWP Well Viewer;6,449,646;0;0;0
+CWS Average;10;MassDEP DWP Well Viewer;6,449,646;0;0;0
+NTNC Average;1;MassDEP DWP Well Viewer;69,210;9;130;69.2
+NTNC Average;5;MassDEP DWP Well Viewer;69,210;4;57.8;30.8
+NTNC Average;10;MassDEP DWP Well Viewer;69,210;0;0;0
+Interpolated;1;MassDEP DWP Well Viewer;199,916;30;150.1;58.8
+Interpolated;5;MassDEP DWP Well Viewer;199,916;9;45;17.6
+Interpolated;10;MassDEP DWP Well Viewer;199,916;12;60;23.5
+Town Average;1;MassDEP DWP Well Viewer;199,916;20;100;35.7
+Town Average;5;MassDEP DWP Well Viewer;199,916;19;95;33.9
+Town Average;10;MassDEP DWP Well Viewer;199,916;17;85;30.4
+County Average;1;MassDEP DWP Well Viewer;199,916;17;85;27.4
+County Average;5;MassDEP DWP Well Viewer;199,916;19;95;30.6
+County Average;10;MassDEP DWP Well Viewer;199,916;26;130.1;41.9
+Region Average;1;MassDEP DWP Well Viewer;199,916;17;85;27
+Region Average;5;MassDEP DWP Well Viewer;199,916;20;100;31.7
+Region Average;10;MassDEP DWP Well Viewer;199,916;26;130.1;41.3
+Probability Maps: LCI;1;MassDEP DWP Well Viewer;199,916;6;30;14
+Probability Maps: LCI;5;MassDEP DWP Well Viewer;199,916;7;35;16.3
+Probability Maps: LCI;10;MassDEP DWP Well Viewer;199,916;30;150.1;69.8
+Probability Maps;1;MassDEP DWP Well Viewer;199,916;8;40;9.3
+Probability Maps;5;MassDEP DWP Well Viewer;199,916;9;45;10.5
+Probability Maps;10;MassDEP DWP Well Viewer;199,916;69;345.1;80.2
+Probability Maps: UCI;1;MassDEP DWP Well Viewer;199,916;6;30;3.3
+Probability Maps: UCI;5;MassDEP DWP Well Viewer;199,916;11;55;6
+Probability Maps: UCI;10;MassDEP DWP Well Viewer;199,916;165;825.3;90.7
+CWS Average;1;MassDEP PWS Service Area Maps;6,449,646;279;43.3;100
+CWS Average;5;MassDEP PWS Service Area Maps;6,449,646;0;0;0
+CWS Average;10;MassDEP PWS Service Area Maps;6,449,646;0;0;0
+NTNC Average;1;MassDEP PWS Service Area Maps;69,210;9;130;69.2
+NTNC Average;5;MassDEP PWS Service Area Maps;69,210;4;57.8;30.8
+NTNC Average;10;MassDEP PWS Service Area Maps;69,210;0;0;0
+Interpolated;1;MassDEP PWS Service Area Maps;637,873;93;145.8;58.9
+Interpolated;5;MassDEP PWS Service Area Maps;637,873;27;42.3;17.1
+Interpolated;10;MassDEP PWS Service Area Maps;637,873;38;59.6;24.1
+Town Average;1;MassDEP PWS Service Area Maps;637,873;59;92.5;33.1
+Town Average;5;MassDEP PWS Service Area Maps;637,873;62;97.2;34.8
+Town Average;10;MassDEP PWS Service Area Maps;637,873;57;89.4;32
+County Average;1;MassDEP PWS Service Area Maps;637,873;54;84.7;27.3
+County Average;5;MassDEP PWS Service Area Maps;637,873;62;97.2;31.3
+County Average;10;MassDEP PWS Service Area Maps;637,873;82;128.6;41.4
+Region Average;1;MassDEP PWS Service Area Maps;637,873;54;84.7;26.7
+Region Average;5;MassDEP PWS Service Area Maps;637,873;65;101.9;32.2
+Region Average;10;MassDEP PWS Service Area Maps;637,873;83;130.1;41.1
+Probability Maps: LCI;1;MassDEP PWS Service Area Maps;637,873;17;26.7;12.7
+Probability Maps: LCI;5;MassDEP PWS Service Area Maps;637,873;23;36.1;17.2
+Probability Maps: LCI;10;MassDEP PWS Service Area Maps;637,873;94;147.4;70.1
+Probability Maps;1;MassDEP PWS Service Area Maps;637,873;25;39.2;9.1
+Probability Maps;5;MassDEP PWS Service Area Maps;637,873;30;47;10.9
+Probability Maps;10;MassDEP PWS Service Area Maps;637,873;219;343.3;79.9
+Probability Maps: UCI;1;MassDEP PWS Service Area Maps;637,873;17;26.7;2.9
+Probability Maps: UCI;5;MassDEP PWS Service Area Maps;637,873;39;61.1;6.7
+Probability Maps: UCI;10;MassDEP PWS Service Area Maps;637,873;522;818.3;90.3

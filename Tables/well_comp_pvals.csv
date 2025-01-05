@@ -1,0 +1,9 @@
+source,training,alternative,as_int,mean_total,mean_total_county,mean_total_region,town_sum_avg,int_town_sum_avg,county_sum_avg,int_county_sum_avg,region_sum_avg,int_region_sum_avg
+EEA Finished NTNC or TNC,Interpolated Data,greater,0,0,0,0,0.1079,0.0009,0.0625,0.0625,0.125,0.125
+EEA Raw GW,Interpolated Data,greater,0.07,0.0011,0,0,0.9851,0.9993,0.9922,0.9922,0.9375,0.9375
+USGS,Interpolated Data,greater,0.0002,0,0,0,0.1419,0.0094,0.0186,0.0801,0.0625,0.125
+USGS,USGS Wells not used in interpolation (pre 2010),greater,1,0.6276,0.0007,0.0034,0.9567,0.2717,0.7114,0.6177,0.6875,0.6875
+EEA Finished NTNC or TNC,Interpolated Data,lesser,1,1,1,1,0.8943,0.9991,1,1,1,1
+EEA Raw GW,Interpolated Data,lesser,0.9301,0.9989,1,1,0.0153,0.0008,0.0156,0.0156,0.125,0.125
+USGS,Interpolated Data,lesser,0.9998,1,1,1,0.8604,0.9908,0.9863,0.9346,1,0.9375
+USGS,USGS Wells not used in interpolation (pre 2010),lesser,0,0.3727,0.9993,0.9966,0.0437,0.7299,0.3188,0.4155,0.4375,0.4375

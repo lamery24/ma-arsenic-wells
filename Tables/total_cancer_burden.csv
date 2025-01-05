@@ -1,0 +1,12 @@
+method;assignment_method;pop;current_csf_Threshold;current_csf_Assigned Value;proposed_csf_Threshold;proposed_csf_Assigned Value
+CWS Average;SDWIS;6,449,646;7.9 (1.2);41.9 (6.5);279.3 (43.3);1480.6 (229.6)
+County Average;DWP Well Viewer;199,916;1.8 (8.8);5.2 (25.8);62.1 (310.4);182.1 (910.8)
+County Average;PWS Service Maps;637,873;5.6 (8.8);16.2 (25.4);198.8 (311.7);571.8 (896.4)
+Interpolated;DWP Well Viewer;199,916;1.5 (7.3);3.4 (17.2);51.4 (257.1);121.8 (609.3)
+Interpolated;PWS Service Maps;637,873;4.5 (7);10.8 (16.9);158.1 (247.9);380.1 (595.9)
+Probability Maps;DWP Well Viewer;199,916;2.4 (12.2);NA;86 (430.4);NA
+Probability Maps;PWS Service Maps;637,873;7.8 (12.2);NA;274.1 (429.7);NA
+Region Average;DWP Well Viewer;199,916;1.8 (9);5.2 (26);63.4 (317.3);183.7 (919.1)
+Region Average;PWS Service Maps;637,873;5.7 (9);16.4 (25.7);202.1 (316.9);578.7 (907.2)
+Town Average;DWP Well Viewer;199,916;1.6 (7.9);4.1 (20.5);55.9 (279.6);144.5 (722.6)
+Town Average;PWS Service Maps;637,873;5 (7.9);13.1 (20.6);178 (279.1);464.2 (727.8)
