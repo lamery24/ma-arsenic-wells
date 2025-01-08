@@ -11,8 +11,6 @@ Output Figures are stored in Data//Figures
 
 All Data used is stored in //Data
 
-Two files which were too large were removed from the data folder: ma_resi_parcels_pws.csv and sm_wells_as.csv
-
-Data from several files were removed as their sources is not publically available or th source data is owned by others: well_parcels.csv, ma_resi_parcels_pws.csv, ma_resi_parcels_wells.csv, sm_wells_as.csv, EAP_PWS Compiled List 11082022.xlsx, WellDrilling.xlsx, and pws-source-id.csv.
+Data from several files were removed as their sources is not publically available or the source data is owned by others: well_parcels.csv, ma_resi_parcels_pws.csv, ma_resi_parcels_wells.csv, sm_wells_as.csv, EAP_PWS Compiled List 11082022.xlsx, WellDrilling.xlsx, and pws-source-id.csv.
 
 Please see the metadata document for a description of the data which was removed
