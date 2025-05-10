@@ -11,8 +11,8 @@ library(ggpmisc)
 options(scipen=999)
 library(caret)
 
-setwd()
-
+#setwd('C:\\Users\\lamery\\OneDrive - University of Massachusetts\\Amery MS Thesis\\Wells')
+setwd('C:\\Users\\liama\\OneDrive - University of Massachusetts\\Amery MS Thesis\\Wells\\Resubmission2\\Code')
 
 #USGS DATA----
 
@@ -634,7 +634,9 @@ gw_extracted<-read.csv("Data\\wells_training_as.csv")%>%
          as_over_5_ci=ifelse(as_over_5_pred_ci=='Y or N',as_over_5,as_over_5_pred_ci),
          as_over_10_ci=ifelse(as_over_10_pred_ci=='Y or N',as_over_10,as_over_10_pred_ci))
 
-
+as_ext<-gw_extracted%>%
+  filter(arsenic_n_>0)%>%
+  filter(training=="Y")
 #exact confusion matricies indicating whether predictions are correct
 confusionMatrix(as_ext$as_over_1_pred%>%as.factor(),as_ext$as_over_1%>%
                   as.factor())
@@ -1729,7 +1731,7 @@ region_as<-well_by_town%>%
                     raw_water_sites=sum(source=='EEA Raw GW'),
                     finished_water_sites=sum(source=='EEA Finished NTNC or TNC'),
                     mean_usgs=mean(arsenic_source_mean[source=='USGS']),
-                    mean_raw_eea=mean(arsenic_source_mean[source=='EEA Raw GW']),,
+                    mean_raw_eea=mean(arsenic_source_mean[source=='EEA Raw GW']),
                     mean_finished_ntnc=mean(arsenic_source_mean[source=='EEA Finished NTNC or TNC']),
                     mean_total=mean(arsenic_source_mean,na.rm=T),
                     sd_total=sd(arsenic_source_mean,na.rm=T),
@@ -1964,6 +1966,49 @@ over_as_exp%>%
   guides(pattern = guide_legend(override.aes = list(fill = "white")),
         fill = guide_legend(override.aes = list(pattern = "none")))
 dev.off()
+
+as_te_panel<-over_as_exp%>%
+  rbind(as_summary_fg)%>%
+  filter(assignment_method=='service_maps'|assignment_method=='SDWIS')%>%
+  mutate(Source=method,
+         Source=ifelse(Source=='mod','Private Wells: Probability Maps',Source),
+         Source=ifelse(Source=='int','Private Wells: Interpolated',Source),
+         Source=ifelse(Source=='town','Private Wells: Town Average',Source),
+         Source=ifelse(Source=='CWS','PWS: CWSs',Source),
+         Source=ifelse(Source=='NTNC','PWS: NTNCs',Source),
+         Source=ifelse(Source=='county_summary','Private Wells: County Average',Source),
+         Source=ifelse(Source=='region_summary','Private Wells: Region Average',Source),
+         threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,c("1","5","10")),
+         Source=as.factor(Source))%>%
+  mutate(Source=fct_relevel(Source,c('PWS: CWSs','PWS: NTNCs','Private Wells: Probability Maps','Private Wells: Interpolated','Private Wells: Town Average','Private Wells: County Average','Private Wells: Region Average')))%>%
+  mutate(threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,c("1","5","10")),
+         `PWS or Well`=ifelse(grepl('PWS',Source),'PWS','Private Well'))%>%
+  filter(Source!='PWS: NTNCs'&Source!='Private Wells: Region Average')%>%
+  ggplot(aes(x=Source,y=percent_exposed,fill=Source,pattern=`PWS or Well`))+
+  geom_bar(stat="identity",position = "dodge",color='black')+
+  geom_bar_pattern(position = "dodge",
+                   color = "black", 
+                   pattern_fill = "black",
+                   pattern_angle = 45,
+                   pattern_density = 0.1,
+                   pattern_spacing = 0.025,
+                   pattern_key_scale_factor = 0.6,
+                   stat="identity") +
+  geom_text(aes(y=percent_exposed+.015,label=labels),position = position_dodge(width=.9),size=3.5)+
+  scale_fill_manual(values = c("sandybrown","darkseagreen4","mediumpurple1","indianred1","royalblue"))+
+  scale_pattern_manual(values = c('PWS' = "stripe", 'Private Well' = "none")) +
+  scale_y_continuous(labels = scales::percent,limits = c(0,0.55))+
+  xlab("")+
+  ylab("Percent of Population Exposed")+
+  theme_classic2()+
+  facet_wrap(~threshold)+
+  theme(axis.text.x = element_blank(),text = element_text(size=16),legend.position = "bottom")+
+  guides(pattern = guide_legend(override.aes = list(fill = "white"),nrow = 2),
+         fill = guide_legend(override.aes = list(pattern = "none"),nrow = 3))
+
+
 
 
 #GDB Figure
@@ -2565,42 +2610,47 @@ accuracy_met_region_zoom_usgs<-as_error%>%
   theme(text = element_text(size=15),legend.position = "bottom",legend.title = element_blank())
 
 
-png("Data\\Figures\\as_well_pred_region_avg.png",height = 12,width=12,res=300,units = "in")
+png("Figures\\as_well_pred_region_avg.png",height = 12,width=12,res=300,units = "in")
 ggarrange(asw1,asw2,
           ncol = 1, nrow = 2,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
 
 
-png("Data\\Figures\\as_well_pred_all_dif.png",height = 12,width=12,res=300,units = "in")
-ggarrange(accuracy_met_int,accuracy_met_town,accuracy_met_county,accuracy_met_region,
-          ncol = 2, nrow = 2,labels="AUTO",
+png("Figures\\as_well_pred_all_dif.png",height = 8,width=18,res=300,units = "in")
+ggarrange(accuracy_met_int,accuracy_met_town,accuracy_met_county,#accuracy_met_region,
+          ncol = 3, nrow = 1,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
 
-png("Data\\Figures\\as_well_pred_all_dif_log.png",height = 12,width=12,res=300,units = "in")
-ggarrange(accuracy_met_int_log,accuracy_met_town_log,accuracy_met_county_log,accuracy_met_region_log,
-          ncol = 2, nrow = 2,labels="AUTO",
+png("Figures\\as_well_pred_all_dif_log.png",height = 8,width=18,res=300,units = "in")
+ggarrange(accuracy_met_int_log,accuracy_met_town_log,accuracy_met_county_log,#accuracy_met_region_log,
+          ncol = 3, nrow = 1,labels="AUTO",
+          #ncol = 2, nrow = 2,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
 
-png("Data\\Figures\\as_well_pred_all_dif_zoom.png",height = 10,width=10,res=300,units = "in")
-ggarrange(accuracy_met_int_zoom,accuracy_met_town_zoom,accuracy_met_county_zoom,accuracy_met_region_zoom,
-          ncol = 2, nrow = 2,labels="AUTO",
+png("Figures\\as_well_pred_all_dif_zoom.png",height = 8,width=18,res=300,units = "in")
+ggarrange(accuracy_met_int_zoom,accuracy_met_town_zoom,accuracy_met_county_zoom,#accuracy_met_region_zoom,
+          ncol = 3, nrow = 1,labels="AUTO",
+          #ncol = 2, nrow = 2,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
 
-png("Data\\Figures\\as_well_pred_all_dif_usgs.png",height = 12,width=12,res=300,units = "in")
-ggarrange(accuracy_met_int_usgs,accuracy_met_town_usgs,accuracy_met_county_usgs,accuracy_met_region_usgs,
-          ncol = 2, nrow = 2,labels="AUTO",
+png("Figures\\as_well_pred_all_dif_usgs.png",height = 8,width=18,res=300,units = "in")
+ggarrange(accuracy_met_int_usgs,accuracy_met_town_usgs,accuracy_met_county_usgs,#accuracy_met_region_usgs,
+          ncol = 3, nrow = 1,labels="AUTO",
+          #ncol = 2, nrow = 2,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
 
-png("Data\\Figures\\as_well_pred_all_dif_zoom_usgs.png",height = 10,width=10,res=300,units = "in")
-ggarrange(accuracy_met_int_zoom_usgs,accuracy_met_town_zoom_usgs,accuracy_met_county_zoom_usgs,accuracy_met_region_zoom_usgs,
-          ncol = 2, nrow = 2,labels="AUTO",
+png("Figures\\as_well_pred_all_dif_zoom_usgs.png",height = 8,width=18,res=300,units = "in")
+ggarrange(accuracy_met_int_zoom_usgs,accuracy_met_town_zoom_usgs,accuracy_met_county_zoom_usgs,#accuracy_met_region_zoom_usgs,
+          ncol = 3, nrow = 1,labels="AUTO",
+          #ncol = 2, nrow = 2,labels="AUTO",
           common.legend = TRUE, legend = "bottom")
 dev.off()
+
 
 
 #Below we do the significance testing described earlier for each method
@@ -2968,13 +3018,13 @@ town_as_health_new<-as_summary%>%
   #equations are described in the manuscript
   mutate(dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
          dose_nc=1000*as_exposed*ir_bw,
-         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -2984,8 +3034,8 @@ town_as_health_new<-as_summary%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3)%>%
+         New_rfd=00.06,
+         Previous_rfd=0.3)%>%
   select(-starts_with("over_"))%>%
   merge(int_wq_uncertainty,all.x=T)%>%
   distinct()
@@ -3051,9 +3101,9 @@ as_cases_per_million2=town_as_health_new%>%
          Method=ifelse(Method=='mean_total_region','Region Average',Method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
   pivot_longer(cols =c('Combined Cancer Cases per Million','Old Slope Factor Cases per Million'),names_to = 'Slope Factor',values_to = 'Cases' )%>%
-  mutate(`Slope Factor`=ifelse(`Slope Factor`=='Old Slope Factor Cases per Million','Current Slope Factor','Proposed Slope Factor'),
-         `Combined Cancer Cases per Million 95th`=ifelse(`Slope Factor`=='Current Slope Factor',NA,`Combined Cancer Cases per Million 95th`),
-         `Combined Cancer Cases per Million 5th`=ifelse(`Slope Factor`=='Current Slope Factor',NA,`Combined Cancer Cases per Million 5th`))
+  mutate(`Slope Factor`=ifelse(`Slope Factor`=='Old Slope Factor Cases per Million','Previous Slope Factor','New Slope Factor'),
+         `Combined Cancer Cases per Million 95th`=ifelse(`Slope Factor`=='Previous Slope Factor',NA,`Combined Cancer Cases per Million 95th`),
+         `Combined Cancer Cases per Million 5th`=ifelse(`Slope Factor`=='Previous Slope Factor',NA,`Combined Cancer Cases per Million 5th`))
 
 
 as_new_long<-town_as_health_new%>%
@@ -3120,11 +3170,11 @@ town_as_health_new%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = pop_percent,fill=Source),color='black',bins=20)+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("coral","darkseagreen1"))+
   scale_x_log10()+
@@ -3162,11 +3212,11 @@ town_as_health_new%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = pop_percent,fill=Source),color='black',bins=20)+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("coral","darkseagreen1"))+
   scale_x_log10()+
@@ -3178,6 +3228,7 @@ town_as_health_new%>%
   theme(text=element_text(size = 16),legend.position = "top")
 dev.off()
   
+
 labs=town_as_health_new%>%
   filter(assignment_method!='gdb')%>%
   group_by(Method)%>%
@@ -3187,6 +3238,7 @@ labs=town_as_health_new%>%
          Method=ifelse(Method=='mean_total_county','County Average',Method),
          Method=ifelse(Method=='mean_total_region','Region Average',Method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
+  filter(Method!='Region Average'&Method!='NTNC Average')%>%
   summarise(n=paste("n=",prettyNum(sum(population_served/5,na.rm=T),big.mark=","),sep=""))
 
 
@@ -3202,13 +3254,14 @@ a<-town_as_health_new%>%
          Method=ifelse(Method=='mean_total_county','County Average',Method),
          Method=ifelse(Method=='mean_total_region','Region Average',Method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
+  filter(Method!='Region Average'&Method!='NTNC Average')%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = pop_percent,fill=Source),color='black',bins=20)+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("coral","darkseagreen1"))+
   scale_x_log10()+
@@ -3229,6 +3282,7 @@ labs=town_as_health_new%>%
          Method=ifelse(Method=='mean_total_county','County Average',Method),
          Method=ifelse(Method=='mean_total_region','Region Average',Method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
+  filter(Method!='Region Average'&Method!='NTNC Average')%>%
   summarise(n=paste("n=",prettyNum(sum(population_served/5,na.rm=T),big.mark=","),sep=""))
 
 
@@ -3244,13 +3298,14 @@ b<-town_as_health_new%>%
          Method=ifelse(Method=='mean_total_county','County Average',Method),
          Method=ifelse(Method=='mean_total_region','Region Average',Method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
+  filter(Method!='Region Average'&Method!='NTNC Average')%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = pop_percent,fill=Source),color='black',bins=20)+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("coral","darkseagreen1"))+
   scale_x_log10()+
@@ -3262,7 +3317,7 @@ b<-town_as_health_new%>%
   theme(text=element_text(size = 16),legend.position = "top")
 
 
-png("Data\\Figures\\as_non_cancer_all_methods.png",width=9,height=10,res=300,units = "in")
+png("Figures\\as_non_cancer_all_methods.png",width=9,height=10,res=300,units = "in")
 
 ggarrange(
   a, b,labels = c("A", "B"),
@@ -3271,16 +3326,18 @@ ggarrange(
 )
 dev.off()
 
-png("Data\\Figures\\as_non_cancer_all_sm.png",width=9,height=6,res=300,units = "in")
+png("Figures\\as_non_cancer_all_sm.png",width=9,height=6,res=300,units = "in")
 a
 dev.off()
 
 #Create Summary Tables
 non_cancer_as2<-town_as_health_new%>%
   mutate(dose_nc=ifelse(dose_nc==0,0.0001,dose_nc),
-         HQ_Current=dose_nc/current_rfd,
-         HQ_Proposed=dose_nc/proposed_rfd)%>%
+         HQ_Previous=dose_nc/Previous_rfd,
+         HQ_New=dose_nc/New_rfd)%>%
   mutate(`Well Assignment Method`=assignment_method)%>%
+  # pivot_longer(cols = c(starts_with("Pop_")), names_to = c("Well Assignment Method"), 
+  #              names_pattern ="Pop_(.*)",values_to = "Population Served")%>%
   filter(Method!='probability_maps')%>%
   mutate(Method=ifelse(Method=='as_int_total','Interpolated',Method),
          Method=ifelse(Method=='as_town_avg','Town Average',Method),
@@ -3293,13 +3350,15 @@ non_cancer_as2<-town_as_health_new%>%
   select(-assignment_method)%>%
   distinct()%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')))%>%
+  filter(Method!='Region Average')%>%
   group_by(Method, `Well Assignment Method`)%>%
   summarise(`Total Population Served`=sum(population_served/5,na.rm=T),
-            `Population Over 1 HQ Current RfD`=paste(prettyNum(sum(Pop_served[HQ_Current>1],na.rm=T),big.mark=",")," (",round((100*sum(Pop_served[HQ_Current>1],na.rm=T))/`Total Population Served`,1),"\\%)",sep=""),
-            `Population Over 1 HQ Proposed RfD`=paste(prettyNum(sum(Pop_served[HQ_Proposed>1],na.rm=T),big.mark=",")," (",round((100*sum(Pop_served[HQ_Proposed>1],na.rm=T))/`Total Population Served`,1),"\\%)",sep=""))%>%
+            `Population Over 1 HQ Previous RfD`=paste(prettyNum(sum(Pop_served[HQ_Previous>1],na.rm=T),big.mark=",")," (",round((100*sum(Pop_served[HQ_Previous>1],na.rm=T))/`Total Population Served`,1),")",sep=""),
+            `Population Over 1 HQ New RfD`=paste(prettyNum(sum(Pop_served[HQ_New>1],na.rm=T),big.mark=",")," (",round((100*sum(Pop_served[HQ_New>1],na.rm=T))/`Total Population Served`,1),")",sep=""))%>%
   mutate(`Total Population Served`=prettyNum(`Total Population Served`,big.mark=","))%>%
-  filter(Method!="NTNC Average")
-  
+  filter(Method!="NTNC Average")%>%
+  filter(Method!="Region Average")
+
 write.table(non_cancer_as2,"Tables\\non_cancer_as2.csv",row.names = F,quote = F,sep=";")
 
 non_cancer_as2%>%
@@ -3310,8 +3369,8 @@ non_cancer_as2%>%
 
 non_cancer_as_risk<-town_as_health_new%>%
   mutate(dose_nc=ifelse(dose_nc==0,0.0001,dose_nc),
-         HQ_Current=dose_nc/current_rfd,
-         HQ_Proposed=dose_nc/proposed_rfd)%>%
+         HQ_Previous=dose_nc/Previous_rfd,
+         HQ_New=dose_nc/New_rfd)%>%
   mutate(`Well Assignment Method`=assignment_method)%>%
   filter(Method!='probability_maps')%>%
   mutate(Method=ifelse(Method=='as_int_total','Interpolated',Method),
@@ -3430,14 +3489,14 @@ town_as_health_threshold_clean<-town_as_health_threshold%>%
   distinct()%>%
   mutate(dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
          dose_nc=1000*as_exposed*ir_bw,
-         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         New_csf=dose*31.7/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -3447,8 +3506,8 @@ town_as_health_threshold_clean<-town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3)%>%
+         New_rfd=0.06,
+         Previous_rfd=0.3)%>%
   distinct()%>%
   mutate(Pop_served=round(population_served*Pop))
 
@@ -3468,7 +3527,7 @@ town_as_health_threshold_clean%>%
   filter(!is.na(percent))%>%
   group_by(threshold,method,Source)%>%
   summarise(pop=sum(Pop_served,na.rm=T),
-            cumulative_cancer_cases=sum(Pop_served*percent*proposed_csf,na.rm=T),
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
             per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
   ungroup()%>%
   #filter(Source!="PWS")%>%
@@ -3517,7 +3576,7 @@ town_as_health_threshold_clean%>%
   filter(!is.na(percent))%>%
   group_by(threshold,method,Source)%>%
   summarise(pop=sum(Pop_served,na.rm=T),
-            cumulative_cancer_cases=sum(Pop_served*percent*proposed_csf,na.rm=T),
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
             per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
   ungroup()%>%
   #filter(Source!="PWS")%>%
@@ -3553,12 +3612,12 @@ dev.off()
 
 #Number of cancer cases by age, base on each thrshold and method
 town_as_health_threshold_clean%>%
-  select(threshold,Age,dose_nc,dose,old_csf,proposed_csf)%>%
+  select(threshold,Age,dose_nc,dose,old_csf,New_csf)%>%
   distinct()%>%
   mutate(dose_nc=round(dose_nc,3),
          dose=round(dose,3),
          old_csf=round(old_csf*1000000, 1),
-         proposed_csf=round(proposed_csf*1000000, 1),
+         New_csf=round(New_csf*1000000, 1),
          Age=ifelse(Age=='under_5_years','0-4 years',Age),
          Age=ifelse(Age=='x5_to_9_years','5-9 years',Age),
          Age=ifelse(Age=='x10_to_14_years','10-14 years',Age),
@@ -3585,14 +3644,14 @@ town_as_health_threshold_clean2<-town_as_health_threshold%>%
          percent=ifelse(percent<0,0,percent))%>%
   mutate(dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
          dose_nc=1000*as_exposed*ir_bw,
-         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         New_csf=dose*31.7/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -3602,29 +3661,29 @@ town_as_health_threshold_clean2<-town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3,
+         New_rfd=00.06,
+         Previous_rfd=0.3,
          Pop_served=round(population_served*Pop))
 
 
-png("Data\\Figures\\as_cancer_threshold_method_methods.png",width=10,height=14,res=300,units = "in")
+png("Figures\\as_cancer_threshold_method_methods.png",width=10,height=14,res=300,units = "in")
 town_as_health_threshold_clean2%>%
   filter(!is.na(percent))%>%
   mutate(`Well Assignment Method`=assignment_method)%>%
   #pivot_longer(cols = c('Pop_gdb','Pop_service_maps'),names_to = 'Well Assignment Method',values_to = 'Pop_gdb')%>%
   group_by(method,Source,`Well Assignment Method`)%>%
   summarise(pop=sum(Pop_served,na.rm=T),
-            Current_CSF_cases_50=sum(Pop_served*percent*old_csf,na.rm=T),
-            Proposed_Bladder_CSF_cases_5=sum(Pop_served*percent*bladder_cancer_prob_5,na.rm=T),
-            Proposed_Bladder_CSF_cases_50=sum(Pop_served*percent*bladder_cancer_prob,na.rm=T),
-            Proposed_Bladder_CSF_cases_95=sum(Pop_served*percent*bladder_cancer_prob_95,na.rm=T),
-            Proposed_Lung_CSF_cases_5=sum(Pop_served*percent*lung_cancer_prob_5,na.rm=T),
-            Proposed_Lung_CSF_cases_50=sum(Pop_served*percent*lung_cancer_prob,na.rm=T),
-            Proposed_Lung_CSF_cases_95=sum(Pop_served*percent*lung_cancer_prob_95,na.rm=T),
-            Proposed_Combined_CSF_cases_50=sum(Pop_served*percent*proposed_csf,na.rm=T),
-            #proposed_csf_cases_5=lung_cases_5+bladder_cases_5,
-            #proposed_csf_cases_95=lung_cases_95+bladder_cases_95
-            )%>%
+            Previous_CSF_cases_50=sum(Pop_served*percent*old_csf,na.rm=T),
+            New_Bladder_CSF_cases_5=sum(Pop_served*percent*bladder_cancer_prob_5,na.rm=T),
+            New_Bladder_CSF_cases_50=sum(Pop_served*percent*bladder_cancer_prob,na.rm=T),
+            New_Bladder_CSF_cases_95=sum(Pop_served*percent*bladder_cancer_prob_95,na.rm=T),
+            New_Lung_CSF_cases_5=sum(Pop_served*percent*lung_cancer_prob_5,na.rm=T),
+            New_Lung_CSF_cases_50=sum(Pop_served*percent*lung_cancer_prob,na.rm=T),
+            New_Lung_CSF_cases_95=sum(Pop_served*percent*lung_cancer_prob_95,na.rm=T),
+            New_Combined_CSF_cases_50=sum(Pop_served*percent*New_csf,na.rm=T),
+            #New_csf_cases_5=lung_cases_5+bladder_cases_5,
+            #New_csf_cases_95=lung_cases_95+bladder_cases_95
+  )%>%
   ungroup()%>%
   pivot_longer(cols = c(ends_with("50"),ends_with("5"),ends_with("95")), names_to = c("csf","ci"), 
                names_pattern ="(.*)_cases_(.*)",values_to = "cases")%>%
@@ -3640,21 +3699,24 @@ town_as_health_threshold_clean2%>%
          `Well Assignment Method`=ifelse( `Well Assignment Method`=='gdb','MassDEP Well Viewer',`Well Assignment Method`),
          `Well Assignment Method`=ifelse( `Well Assignment Method`=='service_maps','MassDEP PWS Service Maps',`Well Assignment Method`))%>%
   mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
-        # threshold=as.factor(threshold),
+         # threshold=as.factor(threshold),
          #threshold=fct_relevel(threshold,c("1","5","10")),
          Method2=ifelse(grepl("Probability",method),"Probability Maps (95%)","Other Methods"),
-        csf=as.factor(gsub("_"," ",csf)),
-        csf=fct_relevel(csf,'Proposed Bladder CSF','Proposed Lung CSF','Proposed Combined CSF','Current CSF'))%>%
+         csf=as.factor(gsub("_"," ",csf)),
+         csf=fct_relevel(csf,'New Bladder CSF','New Lung CSF','New Combined CSF','Previous CSF'))%>%
   mutate(divide_min=ifelse(method=='Probability Maps: Lower Confidence',0,NA),
          divide_max=ifelse(method=='Probability Maps: Lower Confidence',max(cases_50,na.rm=T),NA))%>%
   #view()
   filter(method!="NTNC Average")%>%
+  filter(method!='Region Average')%>%
   #view()
   ggplot(aes(x=method,color=`Well Assignment Method`))+
   geom_linerange(aes(xmin=method,xmax=method,ymin=cases_5,ymax=cases_95),position = position_dodge(width = .75))+
+  #geom_linerange(aes(xmin=method,xmax=method,y=-1,ymin=divide_min,ymax=divide_max),color='black')+
   geom_point(aes(y=cases_50),size=4,shape=18,position = position_dodge(width = 0.75))+
   geom_point(aes(y=cases_5),shape="|",size=4,position = position_dodge(width = 0.75))+
   geom_point(aes(y=cases_95),shape="|",size=4,position = position_dodge(width = 0.75))+
+  #facet_grid(csf~`Well Assignment Method`)+
   facet_wrap(~csf,ncol = 1)+
   scale_color_brewer(palette = "Accent")+
   xlab('')+
@@ -3666,77 +3728,21 @@ dev.off()
 
 
 lab=paste(prettyNum(sum(town_as_health_threshold_clean2%>%
-                ungroup()%>%
-                filter(Source=='Private Well')%>%
-                filter(assignment_method!='service_maps')%>%
-                select(town,population_served)%>%
-                distinct()%>%
-                select(population_served)%>%
-                as.matrix()),big.mark = ","),"well users")
-
-
-png("Data\\Figures\\as_cancer_threshold_method_stacked_gdb.png",width=12.5,height=8,res=300,units = "in")
-town_as_health_threshold_clean2%>%
-  filter(!is.na(percent)&assignment_method!='service_maps')%>%
-  group_by(threshold,method,Source)%>%
-  summarise(pop=sum(Pop_served,na.rm=T),
-            cumulative_cancer_cases=sum(Pop_served*percent*proposed_csf,na.rm=T),
-            per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
-  ungroup()%>%
-  group_by(threshold,Source)%>%
-  mutate(method=ifelse(method=='int','Interpolated',method),
-         method=ifelse(method=='town','Town Average',method),
-         method=ifelse(method=='county','County Average',method),
-         method=ifelse(method=='region','Region Average',method),
-         method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
-         method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
-         method=ifelse(method=='probabilitymaps','Probability Maps',method))%>%
-  mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
-         threshold=as.factor(threshold),
-         threshold=fct_relevel(threshold,c("1","5","10")),
-         Method2=ifelse(grepl("Probability",method),"Probability Maps Confidence",""),
-         Method2=ifelse(grepl("CWS",method),"PWS",Method2),
-         Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
-         Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
-  filter(method!="NTNC Average")%>%
-  group_by(method)%>%
-  mutate(per_million_cancer_cases_10=ifelse(threshold==10,sum(per_million_cancer_cases),NA),
-         per_million_cancer_cases_5=ifelse(threshold==5,sum(per_million_cancer_cases)-mean(per_million_cancer_cases[threshold==10]),NA),
-         per_million_cancer_cases_1=ifelse(threshold==1,mean(per_million_cancer_cases[threshold==1]),NA),
-         outline=mean(per_million_cancer_cases_10,na.rm=T),
-         Method=method)%>%
-  ggplot(aes(x=Method2,fill=Method),pattern_key_scale_factor=.5)+
-  geom_col_pattern(aes(y=per_million_cancer_cases_10,pattern='10'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
-  geom_col_pattern(aes(y=per_million_cancer_cases_5,pattern='5'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
-  geom_col_pattern(aes(y=per_million_cancer_cases_1,pattern='1'),position = "dodge",size=.9,color='black')+
-  scale_pattern_manual(name = 'Threshold', 
-                       values =c('10'='wave','5'='stripe','1'='none'),
-                       breaks=c("1", "5", "10"))+
-  #guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
-  guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
-  #geom_col(aes(y=outline),color='black',position = "dodge",size=.9,alpha=0)+
-  theme_classic()+
-  ylab("Per Million Attributable Cancer Cases")+
-  xlab("")+
-  #geom_text(aes(x="",y=900,label=lab),size=8)+
-  theme(text=element_text(size = 16),legend.position = "top",legend.key.size = unit(1, 'cm'))
-dev.off()
-
-lab=paste(prettyNum(sum(town_as_health_threshold_clean2%>%
                           ungroup()%>%
                           filter(Source=='Private Well')%>%
-                          filter(assignment_method!='gdb')%>%
+                          filter(assignment_method!='service_maps')%>%
                           select(town,population_served)%>%
                           distinct()%>%
                           select(population_served)%>%
                           as.matrix()),big.mark = ","),"well users")
 
-png("Data\\Figures\\as_cancer_threshold_method_stacked_sm.png",width=12.5,height=8,res=300,units = "in")
+
+png("Figures\\as_cancer_threshold_method_stacked_gdb.png",width=14,height=8,res=300,units = "in")
 town_as_health_threshold_clean2%>%
-  filter(!is.na(percent)&assignment_method!='gdb')%>%
+  filter(!is.na(percent)&assignment_method!='service_maps')%>%
   group_by(threshold,method,Source)%>%
   summarise(pop=sum(Pop_served,na.rm=T),
-            cumulative_cancer_cases=sum(Pop_served*percent*proposed_csf,na.rm=T),
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
             per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
   ungroup()%>%
   #filter(Source!="PWS")%>%
@@ -3756,17 +3762,19 @@ town_as_health_threshold_clean2%>%
   mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
          threshold=as.factor(threshold),
          threshold=fct_relevel(threshold,c("1","5","10")),
-         Method2=ifelse(grepl("Probability",method),"Probability Maps Confidence",""),
+         Method2=ifelse(grepl("Probability",method),"Private Wells: Probability Maps Confidence","Private Wells"),
          Method2=ifelse(grepl("CWS",method),"PWS",Method2),
          Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
          Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
   filter(method!="NTNC Average")%>%
+  filter(method!='Region Average')%>%
   group_by(method)%>%
   mutate(per_million_cancer_cases_10=ifelse(threshold==10,sum(per_million_cancer_cases),NA),
          per_million_cancer_cases_5=ifelse(threshold==5,sum(per_million_cancer_cases)-mean(per_million_cancer_cases[threshold==10]),NA),
          per_million_cancer_cases_1=ifelse(threshold==1,mean(per_million_cancer_cases[threshold==1]),NA),
          outline=mean(per_million_cancer_cases_10,na.rm=T),
          Method=method)%>%
+  #view()
   ggplot(aes(x=Method2,fill=Method),pattern_key_scale_factor=.5)+
   #geom_col(aes(y=ui),position = "dodge",size=1.1,alpha=.25)+
   #geom_col(aes(y=li),position = "dodge",size=1.1)+
@@ -3783,49 +3791,140 @@ town_as_health_threshold_clean2%>%
   ylab("Per Million Attributable Cancer Cases")+
   xlab("")+
   #geom_text(aes(x="",y=900,label=lab),size=8)+
-  theme(text=element_text(size = 16),legend.position = "top",legend.key.size = unit(1, 'cm'))
+  theme(text=element_text(size = 22),legend.position = "top",legend.key.size = unit(1.15, 'cm'))
 dev.off()
 
+lab=paste(prettyNum(sum(town_as_health_threshold_clean2%>%
+                          ungroup()%>%
+                          filter(Source=='Private Well')%>%
+                          filter(assignment_method!='gdb')%>%
+                          select(town,population_served)%>%
+                          distinct()%>%
+                          select(population_served)%>%
+                          as.matrix()),big.mark = ","),"well users")
 
+png("Figures\\as_cancer_threshold_method_stacked_sm.png",width=14,height=8,res=300,units = "in")
 town_as_health_threshold_clean2%>%
-  filter(!is.na(percent))%>%
-  group_by(method,threshold,assignment_method)%>%
+  filter(!is.na(percent)&assignment_method!='gdb')%>%
+  group_by(threshold,method,Source)%>%
   summarise(pop=sum(Pop_served,na.rm=T),
-            cumulative_cancer_cases=round(sum(Pop_served*percent*proposed_csf,na.rm=T)),
-            per_million_cancer_cases=round(1000000*(cumulative_cancer_cases/pop),1))%>%
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
+            per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
   ungroup()%>%
-  group_by(assignment_method,method)%>%
-  mutate(percent=round(100*cumulative_cancer_cases/sum(cumulative_cancer_cases),1))%>%
+  #filter(Source!="PWS")%>%
+  group_by(threshold,Source)%>%
+  # mutate(li=mean(per_million_cancer_cases[method=="probabilitymapsli"]),
+  #        ui=mean(per_million_cancer_cases[method=="probabilitymapsui"]),
+  #        li=ifelse(method=="probabilitymaps",li,NA),
+  #        ui=ifelse(method=="probabilitymaps",ui,NA))%>%
+  #filter(method!="probabilitymapsli"&method!="probabilitymapsui")%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
          method=ifelse(method=='county','County Average',method),
          method=ifelse(method=='region','Region Average',method),
-         method=ifelse(method=='probabilitymapsli','Probability Maps: LCI',method),
-         method=ifelse(method=='probabilitymapsui','Probability Maps: UCI',method),
-         method=ifelse(method=='probabilitymaps','Probability Maps',method),
-         method=as.factor(method),
-         assignment_method=ifelse(assignment_method=="gdb","MassDEP DWP Well Viewer",assignment_method),
-         assignment_method=ifelse(assignment_method=="service_maps","MassDEP PWS Service Area Maps",assignment_method)
-         )%>%
-  mutate(method=fct_relevel(method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average','Probability Maps: LCI','Probability Maps','Probability Maps: UCI')),
+         method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
+         method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
+         method=ifelse(method=='probabilitymaps','Probability Maps',method))%>%
+  mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
          threshold=as.factor(threshold),
-         threshold=fct_relevel(threshold,c("1","5","10")))%>%
-  arrange(assignment_method,method,threshold)%>%
-  mutate_each(funs(prettyNum(., big.mark=",")))%>%
-  write.table("Tables\\threshold_percent.csv",quote = F,row.names = F,sep=";")
+         threshold=fct_relevel(threshold,c("1","5","10")),
+         Method2=ifelse(grepl("Probability",method),"Private Wells: Probability Maps Confidence","Private Wells"),
+         Method2=ifelse(grepl("CWS",method),"PWS",Method2),
+         Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
+         Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
+  filter(method!="NTNC Average")%>%
+  filter(method!='Region Average')%>%
+  group_by(method)%>%
+  mutate(per_million_cancer_cases_10=ifelse(threshold==10,sum(per_million_cancer_cases),NA),
+         per_million_cancer_cases_5=ifelse(threshold==5,sum(per_million_cancer_cases)-mean(per_million_cancer_cases[threshold==10]),NA),
+         per_million_cancer_cases_1=ifelse(threshold==1,mean(per_million_cancer_cases[threshold==1]),NA),
+         outline=mean(per_million_cancer_cases_10,na.rm=T),
+         Method=method)%>%
+  ggplot(aes(x=Method2,fill=Method),pattern_key_scale_factor=1.5)+
+  #geom_col(aes(y=ui),position = "dodge",size=1.1,alpha=.25)+
+  #geom_col(aes(y=li),position = "dodge",size=1.1)+
+  geom_col_pattern(aes(y=per_million_cancer_cases_10,pattern='10'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_5,pattern='5'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_1,pattern='1'),position = "dodge",size=.9,color='black')+
+  scale_pattern_manual(name = 'Threshold', 
+                       values =c('10'='wave','5'='stripe','1'='none'),
+                       breaks=c("1", "5", "10"))+
+  #guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  #geom_col(aes(y=outline),color='black',position = "dodge",size=.9,alpha=0)+
+  theme_classic()+
+  ylab("Per Million Attributable Cancer Cases")+
+  xlab("")+
+  #geom_text(aes(x="",y=900,label=lab),size=8)+
+  theme(text=element_text(size = 22),legend.position = "top",legend.key.size = unit(1.15, 'cm'))
+dev.off()
 
 
-#THRESHOLD NO THRESHOLD COMPARISON----
+as_cancer_threshold_method_stacked<-town_as_health_threshold_clean2%>%
+  filter(!is.na(percent)&assignment_method!='gdb')%>%
+  group_by(threshold,method,Source)%>%
+  summarise(pop=sum(Pop_served,na.rm=T),
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
+            per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
+  ungroup()%>%
+  #filter(Source!="PWS")%>%
+  group_by(threshold,Source)%>%
+  # mutate(li=mean(per_million_cancer_cases[method=="probabilitymapsli"]),
+  #        ui=mean(per_million_cancer_cases[method=="probabilitymapsui"]),
+  #        li=ifelse(method=="probabilitymaps",li,NA),
+  #        ui=ifelse(method=="probabilitymaps",ui,NA))%>%
+  #filter(method!="probabilitymapsli"&method!="probabilitymapsui")%>%
+  mutate(method=ifelse(method=='int','Interpolated',method),
+         method=ifelse(method=='town','Town Average',method),
+         method=ifelse(method=='county','County Average',method),
+         method=ifelse(method=='region','Region Average',method),
+         method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
+         method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
+         method=ifelse(method=='probabilitymaps','Probability Maps',method))%>%
+  mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
+         threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,c("1","5","10")),
+         Method2=ifelse(grepl("Probability",method),"Private Wells: Probability Maps Confidence","Private Wells"),
+         Method2=ifelse(grepl("CWS",method),"PWS",Method2),
+         Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
+         Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
+  filter(method!="NTNC Average")%>%
+  filter(method!='Region Average')%>%
+  group_by(method)%>%
+  mutate(per_million_cancer_cases_10=ifelse(threshold==10,sum(per_million_cancer_cases),NA),
+         per_million_cancer_cases_5=ifelse(threshold==5,sum(per_million_cancer_cases)-mean(per_million_cancer_cases[threshold==10]),NA),
+         per_million_cancer_cases_1=ifelse(threshold==1,mean(per_million_cancer_cases[threshold==1]),NA),
+         outline=mean(per_million_cancer_cases_10,na.rm=T),
+         Method=method)%>%
+  ggplot(aes(x=Method2,fill=Method),pattern_key_scale_factor=1.5)+
+  #geom_col(aes(y=ui),position = "dodge",size=1.1,alpha=.25)+
+  #geom_col(aes(y=li),position = "dodge",size=1.1)+
+  #scale_x_discrete(labels = function(x) str_wrap(x, width = 16))+
+  geom_col_pattern(aes(y=per_million_cancer_cases_10,pattern='10'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_5,pattern='5'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_1,pattern='1'),position = "dodge",size=.9,color='black')+
+  scale_pattern_manual(name = 'Threshold', 
+                       values =c('10'='wave','5'='stripe','1'='none'),
+                       breaks=c("1", "5", "10"))+
+  #guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  #geom_col(aes(y=outline),color='black',position = "dodge",size=.9,alpha=0)+
+  theme_classic()+
+  ylab("Per Million Attributable Cancer Cases")+
+  xlab("")+
+  #geom_text(aes(x="",y=900,label=lab),size=8)+
+  theme(text=element_text(size = 16),legend.position = "top",legend.key.size = unit(1.15, 'cm'))
+
 all_as_canc<-town_as_health_threshold_clean2%>%
   filter(!is.na(percent))%>%
   distinct()%>%
   group_by(method,assignment_method)%>%
   summarise(`Calculation Method`='Threshold',
             pop=sum(Pop_served,na.rm=T)/3,
-            cumulative_cancer_cases_current_csf=sum(Pop_served*percent*old_csf,na.rm=T),
-            per_million_cancer_cases_Current_CSF=1000000*(cumulative_cancer_cases_current_csf/pop),
-            cumulative_cancer_cases_proposed_csf=sum(Pop_served*percent*proposed_csf,na.rm=T),
-            per_million_cancer_cases_Proposed_CSF=1000000*(cumulative_cancer_cases_proposed_csf/pop))%>%
+            cumulative_cancer_cases_Previous_csf=sum(Pop_served*percent*old_csf,na.rm=T),
+            per_million_cancer_cases_Previous_CSF=1000000*(cumulative_cancer_cases_Previous_csf/pop),
+            cumulative_cancer_cases_New_csf=sum(Pop_served*percent*New_csf,na.rm=T),
+            per_million_cancer_cases_New_CSF=1000000*(cumulative_cancer_cases_New_csf/pop))%>%
   ungroup()%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
@@ -3841,34 +3940,152 @@ all_as_canc<-town_as_health_threshold_clean2%>%
          Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
          Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
   rbind(town_as_health_new%>%
-    mutate(Population=round(Pop_served,0),
-           method=Method)%>%
-    distinct()%>%
-    group_by(method,assignment_method)%>%
-    summarise(`Calculation Method`='Assigned Value',
-              pop=sum(Pop_served,na.rm=T),
-              cumulative_cancer_cases_current_csf=sum(Pop_served*old_csf,na.rm=T),
-              per_million_cancer_cases_Current_CSF=1000000*(cumulative_cancer_cases_current_csf/pop),
-              cumulative_cancer_cases_proposed_csf=sum(Pop_served*combined_cancer_prob_95,na.rm=T),
-              per_million_cancer_cases_Proposed_CSF=1000000*(cumulative_cancer_cases_proposed_csf/pop))%>%
-    ungroup()%>%
-    mutate(method=ifelse(method=='as_int_total','Interpolated',method),
-           method=ifelse(method=='as_town_avg','Town Average',method),
-           method=ifelse(method=='mean_total_county','County Average',method),
-           method=ifelse(method=='mean_total_region','Region Average',method),
-           method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
-           method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
-           method=ifelse(method=='probabilitymaps','Probability Maps',method),
-           method=as.factor(method))%>%
-    mutate(method=fct_relevel(method, c('CWS Average', 'NTNC Average','Interpolated','Town Average','County Average','Region Average')),
-           Method2=ifelse(grepl("Probability",method),"Probability Maps Confidence",""),
-           Method2=ifelse(grepl("CWS",method),"PWS",Method2),
-           Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
-           Method2=fct_relevel(as.factor(Method2),"PWS","")))%>%
+          mutate(Population=round(Pop_served,0),
+                 method=Method)%>%
+          distinct()%>%
+          group_by(method,assignment_method)%>%
+          summarise(`Calculation Method`='Assigned Value',
+                    pop=sum(Pop_served,na.rm=T),
+                    cumulative_cancer_cases_Previous_csf=sum(Pop_served*old_csf,na.rm=T),
+                    per_million_cancer_cases_Previous_CSF=1000000*(cumulative_cancer_cases_Previous_csf/pop),
+                    cumulative_cancer_cases_New_csf=sum(Pop_served*combined_cancer_prob_95,na.rm=T),
+                    per_million_cancer_cases_New_CSF=1000000*(cumulative_cancer_cases_New_csf/pop))%>%
+          ungroup()%>%
+          mutate(method=ifelse(method=='as_int_total','Interpolated',method),
+                 method=ifelse(method=='as_town_avg','Town Average',method),
+                 method=ifelse(method=='mean_total_county','County Average',method),
+                 method=ifelse(method=='mean_total_region','Region Average',method),
+                 method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
+                 method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
+                 method=ifelse(method=='probabilitymaps','Probability Maps',method),
+                 method=as.factor(method))%>%
+          mutate(method=fct_relevel(method, c('CWS Average', 'NTNC Average','Interpolated','Town Average','County Average','Region Average')),
+                 Method2=ifelse(grepl("Probability",method),"Probability Maps Confidence",""),
+                 Method2=ifelse(grepl("CWS",method),"PWS",Method2),
+                 Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
+                 Method2=fct_relevel(as.factor(Method2),"PWS","")))%>%
   filter(method!="probability_maps")%>%
   mutate(assignment_method=ifelse(assignment_method=='gdb','DWP Well Viewer',assignment_method),
          assignment_method=ifelse(assignment_method=='service_maps','PWS Service Maps',assignment_method))
-  
+
+
+as_threshold_vs_no_threshold<-all_as_canc%>%
+  filter(method!="NTNC Average")%>%
+  filter(method!='Region Average')%>%
+  pivot_longer(cols = starts_with("per_million"),names_pattern = "per_million_cancer_cases_(.*)",names_to = "Slope Factor")%>%
+  mutate(`Slope Factor`=gsub("_"," ",`Slope Factor`))%>%
+  filter(assignment_method=='PWS Service Maps')%>%
+  ggplot(aes(x=method))+
+  geom_point(aes(y=value,shape=`Calculation Method`,color=`Slope Factor`),size=5)+
+  scale_shape_manual(values=c(16,18))+
+  ylab("Per Million Attributable Cancer Cases")+
+  xlab("")+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12))+
+  scale_fill_brewer(palette = "Set1")+
+  scale_color_brewer(palette = "Set1")+
+  guides(color = guide_legend(nrow = 2),shape=guide_legend(nrow = 2))+
+  theme_bw()+
+  theme(text=element_text(size = 16),legend.position = "top",legend.box = 'vertical')
+
+
+town_as_health_threshold_clean2%>%
+  filter(!is.na(percent))%>%
+  group_by(method,threshold,assignment_method)%>%
+  summarise(pop=sum(Pop_served,na.rm=T),
+            cumulative_cancer_cases=round(sum(Pop_served*percent*New_csf,na.rm=T)),
+            per_million_cancer_cases=round(1000000*(cumulative_cancer_cases/pop),1))%>%
+  ungroup()%>%
+  group_by(assignment_method,method)%>%
+  mutate(percent=round(100*cumulative_cancer_cases/sum(cumulative_cancer_cases),1))%>%
+  mutate(method=ifelse(method=='int','Interpolated',method),
+         method=ifelse(method=='town','Town Average',method),
+         method=ifelse(method=='county','County Average',method),
+         method=ifelse(method=='region','Region Average',method),
+         method=ifelse(method=='probabilitymapsli','Probability Maps: LCI',method),
+         method=ifelse(method=='probabilitymapsui','Probability Maps: UCI',method),
+         method=ifelse(method=='probabilitymaps','Probability Maps',method),
+         method=as.factor(method),
+         assignment_method=ifelse(assignment_method=="gdb","MassDEP DWP Well Viewer",assignment_method),
+         assignment_method=ifelse(assignment_method=="service_maps","MassDEP PWS Service Area Maps",assignment_method)
+  )%>%
+  mutate(method=fct_relevel(method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average','Probability Maps: LCI','Probability Maps','Probability Maps: UCI')),
+         threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,c("1","5","10")))%>%
+  filter(method!='Region Average')%>%
+  arrange(assignment_method,method,threshold)%>%
+  mutate_each(funs(prettyNum(., big.mark=",")))%>%
+  write.table("Tables\\threshold_percent.csv",quote = F,row.names = F,sep=";")
+
+
+#THRESHOLD NO THRESHOLD COMPARISON----
+
+as_cancer_threshold_method_stacked<-town_as_health_threshold_clean2%>%
+  filter(!is.na(percent)&assignment_method!='service_maps')%>%
+  group_by(threshold,method,Source)%>%
+  summarise(pop=sum(Pop_served,na.rm=T),
+            cumulative_cancer_cases=sum(Pop_served*percent*New_csf,na.rm=T),
+            per_million_cancer_cases=1000000*(cumulative_cancer_cases/pop))%>%
+  ungroup()%>%
+  group_by(threshold,Source)%>%
+  mutate(method=ifelse(method=='int','Interpolated',method),
+         method=ifelse(method=='town','Town Average',method),
+         method=ifelse(method=='county','County Average',method),
+         method=ifelse(method=='region','Region Average',method),
+         method=ifelse(method=='probabilitymapsli','Probability Maps: Lower Confidence',method),
+         method=ifelse(method=='probabilitymapsui','Probability Maps: Upper Confidence',method),
+         method=ifelse(method=='probabilitymaps','Probability Maps',method))%>%
+  mutate(method=fct_relevel(method, c('Interpolated','Town Average','County Average','Region Average','Probability Maps: Lower Confidence','Probability Maps','Probability Maps: Upper Confidence')),
+         threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,c("1","5","10")),
+         Method2=ifelse(grepl("Probability",method),"Probability Maps Confidence",""),
+         Method2=ifelse(grepl("CWS",method),"PWS",Method2),
+         Method2=ifelse(grepl("NTNC",method),"PWS",Method2),
+         Method2=fct_relevel(as.factor(Method2),"PWS","","Probability Maps Confidence"))%>%
+  filter(method!="NTNC Average")%>%
+  group_by(method)%>%
+  mutate(per_million_cancer_cases_10=ifelse(threshold==10,sum(per_million_cancer_cases),NA),
+         per_million_cancer_cases_5=ifelse(threshold==5,sum(per_million_cancer_cases)-mean(per_million_cancer_cases[threshold==10]),NA),
+         per_million_cancer_cases_1=ifelse(threshold==1,mean(per_million_cancer_cases[threshold==1]),NA),
+         outline=mean(per_million_cancer_cases_10,na.rm=T),
+         Method=method)%>%
+  ggplot(aes(x=Method2,fill=Method),pattern_key_scale_factor=.5)+
+  geom_col_pattern(aes(y=per_million_cancer_cases_10,pattern='10'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_5,pattern='5'),position = "dodge",size=.9,pattern_spacing=0.02,color='black')+
+  geom_col_pattern(aes(y=per_million_cancer_cases_1,pattern='1'),position = "dodge",size=.9,color='black')+
+  scale_pattern_manual(name = 'Threshold', 
+                       values =c('10'='wave','5'='stripe','1'='none'),
+                       breaks=c("1", "5", "10"))+
+  #guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  guides(fill = guide_legend(nrow = 4,override.aes = list(pattern = "none")),pattern = guide_legend(nrow = 3,override.aes = list(fill = "white")))+
+  #geom_col(aes(y=outline),color='black',position = "dodge",size=.9,alpha=0)+
+  theme_classic()+
+  ylab("Per Million Attributable Cancer Cases")+
+  xlab("")+
+  #geom_text(aes(x="",y=900,label=lab),size=8)+
+  theme(text=element_text(size = 16),legend.position = "top",legend.key.size = unit(1, 'cm'))
+
+as_threshold_vs_no_threshold<-all_as_canc%>%
+  filter(method!="NTNC Average")%>%
+  pivot_longer(cols = starts_with("per_million"),names_pattern = "per_million_cancer_cases_(.*)",names_to = "Slope Factor")%>%
+  mutate(`Slope Factor`=gsub("_"," ",`Slope Factor`))%>%
+  filter(assignment_method=='PWS Service Maps')%>%
+  ggplot(aes(x=method))+
+  geom_point(aes(y=value,shape=`Calculation Method`,color=`Slope Factor`),size=5)+
+  scale_shape_manual(values=c(16,18))+
+  ylab("Per Million Attributable Cancer Cases")+
+  xlab("")+
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 12))+
+  scale_fill_brewer(palette = "Set1")+
+  scale_color_brewer(palette = "Set1")+
+  guides(color = guide_legend(nrow = 2),shape=guide_legend(nrow = 2))+
+  theme_bw()+
+  theme(text=element_text(size = 16),legend.position = "top",legend.box = 'vertical')
+
+png("Figures\\as_cancer_panel.png",width=20,height=10,res=300,units = "in")
+as_cancer_panel<-ggarrange(as_cancer_threshold_method_stacked,as_threshold_vs_no_threshold,labels=c("a)","b)"),align="h",vjust = 46,font.label = list(size=20))
+as_cancer_panel
+dev.off()
+
 
 
 png("Data\\Figures\\as_threshold_vs_no_threshold.png",width=14,height=6,res=300,units = "in")
@@ -3905,31 +4122,31 @@ all_as_canc%>%
   theme(text=element_text(size = 16))
 dev.off()
 
-png("Data\\Figures\\as_threshold_vs_no_threshold_currentcsf.png",width=14,height=8,res=300,units = "in")
+png("Data\\Figures\\as_threshold_vs_no_threshold_Previouscsf.png",width=14,height=8,res=300,units = "in")
 all_as_canc%>%
   filter(method!='NTNC')%>%
   ggplot(aes(y=method))+
-  geom_point(aes(x=cumulative_cancer_cases_current_csf,shape=`Calculation Method`),color='red',size=5)+
+  geom_point(aes(x=cumulative_cancer_cases_Previous_csf,shape=`Calculation Method`),color='red',size=5)+
   scale_shape_manual(values=c(16,18))+
   facet_wrap(~assignment_method,ncol = 1)+
   xlab("Total Attributable Cancer Cases")+
   ylab("")+
   theme_bw()+
-  ggtitle('Current CSF')+
+  ggtitle('Previous CSF')+
   theme(text=element_text(size = 16),legend.position = "top")
 dev.off()
 
-png("Data\\Figures\\as_threshold_vs_no_threshold_proposedcsf.png",width=14,height=8,res=300,units = "in")
+png("Data\\Figures\\as_threshold_vs_no_threshold_Newcsf.png",width=14,height=8,res=300,units = "in")
 all_as_canc%>%
   filter(method!='NTNC')%>%
   ggplot(aes(y=method))+
-  geom_point(aes(x=cumulative_cancer_cases_proposed_csf,shape=`Calculation Method`),color='blue',size=5)+
+  geom_point(aes(x=cumulative_cancer_cases_New_csf,shape=`Calculation Method`),color='blue',size=5)+
   scale_shape_manual(values=c(16,18))+
   facet_wrap(~assignment_method,ncol = 1)+
   xlab("Total Attributable Cancer Cases")+
   ylab("")+
   theme_bw()+
-  ggtitle('Proposed CSF')+
+  ggtitle('New CSF')+
 theme(text=element_text(size = 16),legend.position = "top")
 dev.off()
 
@@ -3937,24 +4154,24 @@ a<-all_as_canc%>%
   filter(assignment_method=="PWS Service Maps")%>%
   filter(method!='NTNC Average')%>%
   ggplot(aes(y=method))+
-  geom_point(aes(x=cumulative_cancer_cases_current_csf,shape=`Calculation Method`),color='red',size=5)+
+  geom_point(aes(x=cumulative_cancer_cases_Previous_csf,shape=`Calculation Method`),color='red',size=5)+
   scale_shape_manual(values=c(16,18))+
   xlab("Total Attributable Cancer Cases")+
   ylab("")+
   theme_bw()+
-  geom_text(aes(x=35,y="Probability Maps: Upper Confidence",label='Current CSF'),size=8)+
+  geom_text(aes(x=35,y="Probability Maps: Upper Confidence",label='Previous CSF'),size=8)+
   theme(text=element_text(size = 20),legend.position = "bottom")
 
 b<-all_as_canc%>%
   filter(assignment_method=="PWS Service Maps")%>%
   filter(method!='NTNC Average')%>%
   ggplot(aes(y=method))+
-  geom_point(aes(x=cumulative_cancer_cases_proposed_csf,shape=`Calculation Method`),color='blue',size=5)+
+  geom_point(aes(x=cumulative_cancer_cases_New_csf,shape=`Calculation Method`),color='blue',size=5)+
   scale_shape_manual(values=c(16,18))+
   xlab("Total Attributable Cancer Cases")+
   ylab("")+
   theme_bw()+
-  geom_text(aes(x=1200,y="Probability Maps: Upper Confidence",label='Proposed CSF'),size=8)+
+  geom_text(aes(x=1200,y="Probability Maps: Upper Confidence",label='New CSF'),size=8)+
   theme(text=element_text(size = 20),legend.position = "bottom")
 
 png("Data\\Figures\\as_threshold_vs_no_threshold_both.png",width=14,height=8,res=300,units = "in")
@@ -3973,14 +4190,14 @@ town_as_health_threshold%>%
          as_exposed=ifelse(threshold==10,0.01,as_exposed),
          dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
          dose_nc=1000*as_exposed*ir_bw,
-         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         New_csf=dose*31.7/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -3990,8 +4207,8 @@ town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3)%>%
+         New_rfd=00.06,
+         Previous_rfd=0.3)%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
          method=ifelse(method=='county','County Average',method),
@@ -4021,6 +4238,7 @@ town_as_health_threshold%>%
 
 town_as_health_threshold%>%
   filter(Method!="NTNC Average")%>%
+  filter(Method!='Region Average')%>%
   select(-over_1,-over_5,-over_10,-Method)%>%
   pivot_longer(cols = c(starts_with("over")), names_to = c("threshold","method"), 
                names_pattern ="over_(.*)_(.*)",values_to = "percent")%>%
@@ -4037,7 +4255,7 @@ town_as_health_threshold%>%
          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         New_csf=dose*53/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -4047,8 +4265,8 @@ town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3)%>%
+         New_rfd=0.031,
+         Previous_rfd=0.3)%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
          method=ifelse(method=='county','County Average',method),
@@ -4062,6 +4280,7 @@ town_as_health_threshold%>%
          as_exposed=as_exposed*1000)%>%
   mutate(Source=fct_relevel(Source, c('CWS Average','Interpolated','Town Average','County Average','Region Average','Probability Maps (LCI)','Probability Maps','Probability Maps (UCI)')))%>%
   distinct()%>%
+  filter(method!='Region Average')%>%
   select(-method)%>%
   filter(assignment_method!='gdb')%>%
   mutate(assignment_method=ifelse(assignment_method=='gdb',"MassDEP DWP Well Viewer",assignment_method),
@@ -4069,8 +4288,7 @@ town_as_health_threshold%>%
   distinct()%>%
   group_by(assignment_method,Source,as_exposed)%>%
   summarise(users=sum(Pop_served,na.rm=T),
-            over=paste(prettyNum(round(sum(Pop_served*percent,na.rm=T)),big.mark=","),' (',(round(100*round(sum(Pop_served*percent,na.rm=T))/users,1)),")",sep=""),
-            )%>%
+            over=round(100*round(sum(Pop_served*percent,na.rm=T))/users,1))%>%
   mutate(users=prettyNum(users,big.mark=","))%>%
   pivot_wider(names_from = as_exposed,values_from = over)%>%
   mutate(assignment_method=ifelse(Source=='CWS Average','SDWIS',assignment_method))%>%
@@ -4078,6 +4296,65 @@ town_as_health_threshold%>%
   ungroup()%>%
   select(-assignment_method)%>%
   write.table("Tables\\as_threshold_summary_cut.csv",quote = F,row.names = F,sep = ";")
+
+town_as_health_threshold%>%
+  filter(Method!="NTNC Average")%>%
+  filter(Method!='Region Average')%>%
+  select(-over_1,-over_5,-over_10,-Method)%>%
+  pivot_longer(cols = c(starts_with("over")), names_to = c("threshold","method"), 
+               names_pattern ="over_(.*)_(.*)",values_to = "percent")%>%
+  mutate(Pop_served=population_served*Pop,
+         as_exposed=ifelse(threshold==1,0.001,as_exposed),
+         as_exposed=ifelse(threshold==5,0.005,as_exposed),
+         as_exposed=ifelse(threshold==10,0.01,as_exposed),
+         dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
+         dose_nc=1000*as_exposed*ir_bw,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
+         New_csf=dose*53/1000,
+         old_csf=dose*1.5/1000,
+         cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
+         cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
+         fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
+         fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
+         ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
+         ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
+         fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
+         fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
+         New_rfd=0.031,
+         Previous_rfd=0.3)%>%
+  mutate(method=ifelse(method=='int','Interpolated',method),
+         method=ifelse(method=='town','Town Average',method),
+         method=ifelse(method=='county','County Average',method),
+         method=ifelse(method=='region','Region Average',method),
+         method=ifelse(method=='probabilitymaps','Probability Maps',method),
+         method=ifelse(method=='probabilitymapsli','Probability Maps (LCI)',method),
+         method=ifelse(method=='probabilitymapsui','Probability Maps (UCI)',method))%>%
+  select(-n)%>%
+  filter(!is.na(percent))%>%
+  mutate(Source=ifelse(Source=="PWS","CWS Average",method),
+         as_exposed=as_exposed*1000)%>%
+  mutate(Source=fct_relevel(Source, c('CWS Average','Interpolated','Town Average','County Average','Region Average','Probability Maps (LCI)','Probability Maps','Probability Maps (UCI)')))%>%
+  distinct()%>%
+  filter(method!='Region Average')%>%
+  select(-method)%>%
+  mutate(assignment_method=ifelse(assignment_method=='gdb',"MassDEP DWP Well Viewer",assignment_method),
+         assignment_method=ifelse(assignment_method=='service_maps',"PWS Service Maps",assignment_method))%>%
+  distinct()%>%
+  group_by(assignment_method,Source,as_exposed)%>%
+  summarise(users=sum(Pop_served,na.rm=T),
+            over=round(100*round(sum(Pop_served*percent,na.rm=T))/users,1)
+  )%>%
+  mutate(users=prettyNum(users,big.mark=","))%>%pivot_wider(names_from = as_exposed,values_from = over)%>%
+  mutate(assignment_method=ifelse(Source=='CWS Average','SDWIS',assignment_method))%>%
+  distinct()%>%
+  write.table("Tables\\as_threshold_summary.csv",quote = F,row.names = F,sep=";")
+
 
 town_as_health_threshold%>%
   filter(Method!="NTNC Average")%>%
@@ -4097,7 +4374,7 @@ town_as_health_threshold%>%
          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         New_csf=dose*53/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -4107,8 +4384,8 @@ town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3)%>%
+         New_rfd=0.031,
+         Previous_rfd=0.3)%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
          method=ifelse(method=='county','County Average',method),
@@ -4122,19 +4399,230 @@ town_as_health_threshold%>%
          as_exposed=as_exposed*1000)%>%
   mutate(Source=fct_relevel(Source, c('CWS Average','Interpolated','Town Average','County Average','Region Average','Probability Maps (LCI)','Probability Maps','Probability Maps (UCI)')))%>%
   distinct()%>%
-  #pivot_longer(cols = c('Pop_gdb','Pop_service_maps'),names_to = "population_method",values_to = "Pop_served")%>%
+  filter(method!='Region Average')%>%
   select(-method)%>%
   mutate(assignment_method=ifelse(assignment_method=='gdb',"MassDEP DWP Well Viewer",assignment_method),
          assignment_method=ifelse(assignment_method=='service_maps',"PWS Service Maps",assignment_method))%>%
   distinct()%>%
   group_by(assignment_method,Source)%>%
   summarise(users=sum(Pop_served,na.rm=T),
+            #over=paste(round(sum(Pop_served*percent,na.rm=T)),' (',(round(100*round(sum(Pop_served*percent,na.rm=T))/users,1)),"\\%)",sep=""),
             over=paste(prettyNum(round(sum(Pop_served*percent,na.rm=T)),big.mark=","),' (',(round(100*round(sum(Pop_served*percent,na.rm=T))/users,1)),"\\%)",sep=""),
   )%>%
   mutate(users=prettyNum(users/3,big.mark=","))%>%
   mutate(assignment_method=ifelse(Source=='CWS Average','SDWIS',assignment_method))%>%
   distinct()%>%
   write.table("Tables\\as_threshold_summary_rfd.csv",quote = F,row.names = F,sep=";")
+
+#Arsenic Uncertainty----
+
+
+as_plot_data<-int_wq_as%>%
+  summarise(over_1=sum(as_1_prob),
+            over_5=sum(as_5_prob),
+            over_10=sum(as_10_prob),
+            bound='actual_prediction',
+            method='probability maps',
+            n=sum(!is.na(as_1_prob)))%>%
+  rbind(int_wq_as%>%
+          summarise(over_1=sum(as_1_lci),
+                  over_5=sum(as_5_lci),
+                  over_10=sum(as_10_lci),
+                  bound='lower_confidence',
+                  method='probability maps',
+                  n=sum(!is.na(as_1_lci))))%>%
+  rbind(int_wq_as%>%
+          summarise(over_1=sum(as_1_uci),
+                  over_5=sum(as_5_uci),
+                  over_10=sum(as_10_uci),
+                  bound='upper_confidence',
+                  method='probability maps',
+                  n=sum(!is.na(as_1_uci))))%>%
+  rbind(int_wq_as%>%
+          summarise(over_1=sum(as_int>=0.001,na.rm=T),
+                  over_5=sum(as_int>=0.005,na.rm=T),
+                  over_10=sum(as_int>=0.01,na.rm=T),
+                  bound='actual_prediction',
+                  method='interpolation',
+                  n=sum(!is.na(as_int))))%>%
+  rbind(pw_vs_pws%>%
+          filter(arsenic_source_mean>=0)%>%
+          mutate(as_int=arsenic_source_mean)%>%
+          summarise(over_1=sum(as_int>=0.001,na.rm=T),
+                    over_5=sum(as_int>=0.005,na.rm=T),
+                    over_10=sum(as_int>=0.01,na.rm=T),
+                    bound='actual_prediction',
+                    method='training wells',
+                    n=sum(!is.na(as_int))))%>%
+  mutate(over_1_prob=100*over_1/n,
+         over_5_prob=100*over_5/n,
+         over_10_prob=100*over_10/n,
+         Method=str_to_title(method))
+  
+  
+png("Figures\\as_uncertainty_threshold_gdb.png",width=12,height=7,res=300,units = "in")
+as_plot_data%>%
+  select(bound,Method,ends_with('prob'))%>%
+  pivot_longer(cols = c(over_1_prob,over_5_prob,over_10_prob), names_to = c("threshold"), 
+               names_pattern ="over_(.*)_prob",values_to = "percent")%>%
+  pivot_wider(id_cols = c('Method','threshold'),names_from = 'bound',values_from = percent)%>%
+  mutate(threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,"1","5","10"))%>%
+  rbind(over_as_exp%>%
+          rbind(as_summary_fg)%>%
+          ungroup()%>%
+          filter(assignment_method=='gdb')%>%
+          filter(method=="county_summary"|method=="region_summary"|method=="town")%>%
+          mutate(Method=method,
+                 Method=ifelse(Method=='town','Town Average',Method),
+                 Method=ifelse(Method=='county_summary','County Average',Method),
+                 Method=ifelse(Method=='region_summary','Region Average',Method),
+                 actual_prediction=percent_exposed*100,lower_confidence=NA,upper_confidence=NA)%>%
+          select(Method,threshold,actual_prediction,lower_confidence,upper_confidence))%>%
+  mutate(Method=fct_relevel(Method,"Training Wells","Region Average","County Average","Town Average","Interpolation","Probability Maps"),
+         Method=fct_rev(Method))%>%
+  filter(Method!='Region Average'&Method!='Training Wells')%>%
+  ggplot(aes(y=Method,color=Method))+
+  geom_segment(aes(yend=Method,x=lower_confidence,xend=upper_confidence))+
+  geom_point(aes(x=actual_prediction),size=6,shape=18)+
+  geom_point(aes(x=lower_confidence),shape="|",size=8)+
+  geom_point(aes(x=upper_confidence),shape="|",size=8)+
+  scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
+  guides(color=guide_legend(nrow=2,byrow=TRUE))+
+  xlab("Percentage of Wells Exceeding Threshold")+
+  ylab("As Concentration (ug/L)")+
+  facet_grid(rows="threshold")+
+  theme_classic()+
+  theme(axis.text.y = element_blank(),text=element_text(size = 26),legend.position = "top")
+dev.off()  
+  
+
+
+as_plot_data<-sm_int_wq_as%>%
+  summarise(over_1=sum(as_1_prob),
+            over_5=sum(as_5_prob),
+            over_10=sum(as_10_prob),
+            bound='actual_prediction',
+            method='probability maps',
+            n=sum(!is.na(as_1_prob)))%>%
+  rbind(sm_int_wq_as%>%
+          summarise(over_1=sum(as_1_lci),
+                    over_5=sum(as_5_lci),
+                    over_10=sum(as_10_lci),
+                    bound='lower_confidence',
+                    method='probability maps',
+                    n=sum(!is.na(as_1_lci))))%>%
+  rbind(sm_int_wq_as%>%
+          summarise(over_1=sum(as_1_uci),
+                    over_5=sum(as_5_uci),
+                    over_10=sum(as_prob_10_uci),
+                    bound='upper_confidence',
+                    method='probability maps',
+                    n=sum(!is.na(as_1_uci))))%>%
+  rbind(sm_int_wq_as%>%
+          summarise(over_1=sum(as_int>=0.001,na.rm=T),
+                    over_5=sum(as_int>=0.005,na.rm=T),
+                    over_10=sum(as_int>=0.01,na.rm=T),
+                    bound='actual_prediction',
+                    method='interpolation',
+                    n=sum(!is.na(as_int))))%>%
+rbind(pw_vs_pws%>%
+        filter(arsenic_source_mean>=0)%>%
+        mutate(as_int=arsenic_source_mean)%>%
+        summarise(over_1=sum(as_int>=0.001,na.rm=T),
+                  over_5=sum(as_int>=0.005,na.rm=T),
+                  over_10=sum(as_int>=0.01,na.rm=T),
+                  bound='actual_prediction',
+                  method='training wells',
+                  n=sum(!is.na(as_int))))%>%
+  mutate(over_1_prob=100*over_1/n,
+         over_5_prob=100*over_5/n,
+         over_10_prob=100*over_10/n,
+         Method=str_to_title(method))
+
+
+png("Figures\\as_uncertainty_threshold.png",width=12,height=7,res=300,units = "in")
+as_plot_data%>%
+  select(bound,Method,ends_with('prob'))%>%
+  pivot_longer(cols = c(over_1_prob,over_5_prob,over_10_prob), names_to = c("threshold"), 
+               names_pattern ="over_(.*)_prob",values_to = "percent")%>%
+  pivot_wider(id_cols = c('Method','threshold'),names_from = 'bound',values_from = percent)%>%
+  mutate(threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,"1","5","10"))%>%
+  rbind(over_as_exp%>%
+          rbind(as_summary_fg)%>%
+          ungroup()%>%
+          filter(assignment_method!='gdb')%>%
+          filter(method=="county_summary"|method=="region_summary"|method=="town")%>%
+          mutate(Method=method,
+                 Method=ifelse(Method=='town','Town Average',Method),
+                 Method=ifelse(Method=='county_summary','County Average',Method),
+                 Method=ifelse(Method=='region_summary','Region Average',Method),
+                 actual_prediction=percent_exposed*100,lower_confidence=NA,upper_confidence=NA)%>%
+          select(Method,threshold,actual_prediction,lower_confidence,upper_confidence))%>%
+  mutate(Method=fct_relevel(Method,"Training Wells","Region Average","County Average","Town Average","Interpolation","Probability Maps"),
+         Method=fct_rev(Method))%>%
+  filter(Method!='Region Average'&Method!='Training Wells')%>%
+  ggplot(aes(y=Method,color=Method))+
+  geom_segment(aes(yend=Method,x=lower_confidence,xend=upper_confidence))+
+  geom_point(aes(x=actual_prediction),size=6,shape=18)+
+  geom_point(aes(x=lower_confidence),shape="|",size=8)+
+  geom_point(aes(x=upper_confidence),shape="|",size=8)+
+  scale_color_brewer(palette = "Set1")+
+  scale_fill_brewer(palette = "Set1")+
+  scale_y_discrete(position = "right")+
+  guides(color=guide_legend(nrow=2,byrow=TRUE))+
+  xlab("Percentage of Wells Exceeding Threshold")+
+  ylab("As Concentration (ug/L)")+
+  facet_grid(rows="threshold")+
+  theme_classic()+
+  theme(axis.text.y = element_blank(),text=element_text(size = 26),legend.position = "top")
+dev.off()  
+
+
+as_ut_panel<-as_plot_data%>%
+  select(bound,Method,ends_with('prob'))%>%
+  pivot_longer(cols = c(over_1_prob,over_5_prob,over_10_prob), names_to = c("threshold"), 
+               names_pattern ="over_(.*)_prob",values_to = "percent")%>%
+  pivot_wider(id_cols = c('Method','threshold'),names_from = 'bound',values_from = percent)%>%
+  mutate(threshold=as.factor(threshold),
+         threshold=fct_relevel(threshold,"1","5","10"))%>%
+  rbind(over_as_exp%>%
+          rbind(as_summary_fg)%>%
+          ungroup()%>%
+          filter(assignment_method!='gdb')%>%
+          filter(method=="county_summary"|method=="region_summary"|method=="town")%>%
+          mutate(Method=method,
+                 Method=ifelse(Method=='town','Town Average',Method),
+                 Method=ifelse(Method=='county_summary','County Average',Method),
+                 Method=ifelse(Method=='region_summary','Region Average',Method),
+                 actual_prediction=percent_exposed*100,lower_confidence=NA,upper_confidence=NA)%>%
+          select(Method,threshold,actual_prediction,lower_confidence,upper_confidence))%>%
+  mutate(Method=fct_relevel(Method,"Training Wells","Region Average","County Average","Town Average","Interpolation","Probability Maps"),
+         Method=fct_rev(Method))%>%
+  filter(Method!='Region Average'&Method!='Training Wells')%>%
+  ggplot(aes(x=Method,color=Method))+
+  geom_segment(aes(xend=Method,y=lower_confidence,yend=upper_confidence))+
+  geom_point(aes(y=actual_prediction),size=6,shape=18)+
+  geom_point(aes(y=lower_confidence),shape="_",size=8)+
+  geom_point(aes(y=upper_confidence),shape="_",size=8)+
+  scale_color_manual(values  = c("darkseagreen4","mediumpurple1","indianred1","royalblue"))+
+  #scale_x_discrete(position = "right")+
+  ylab("Percentage of Wells Exceeding Threshold")+
+  xlab("")+
+  facet_wrap(~threshold)+
+  theme_classic()+
+  ylim(0,55)+
+  theme(axis.text.x = element_blank(),text=element_text(size = 16),legend.position = "none")
+
+panel_as<-ggarrange(as_ut_panel,as_te_panel,labels=c("a)","b)"),legend = "bottom", widths = c(1,2),legend.grob =get_legend(as_te_panel),vjust = 46)
+
+
+png("Figures\\as_threshold_exposed_panel.png",width=12,height=8,res=300,units = "in")
+annotate_figure(panel_as, top = text_grob(expression(paste("Arsenic (",mu,"g/L) threshold")), 
+                                          color = "black", face = "bold", size = 20))
+dev.off()
 
 
 #Non-Cancer Threshold Tables and Figures----
@@ -4162,14 +4650,14 @@ all_as_non_cancer<-town_as_health_threshold%>%
   ungroup()%>%
   mutate(dose=ifelse(Age=='adults',1000*as_exposed*ir_bw*(33/78),1000*as_exposed*ir_bw*(21/78)),
          dose_nc=1000*as_exposed*ir_bw,
-         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-         lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-         lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-         lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-         proposed_csf=dose*53/1000,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         New_csf=dose*31.7/1000,
          old_csf=dose*1.5/1000,
          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -4179,14 +4667,14 @@ all_as_non_cancer<-town_as_health_threshold%>%
          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-         proposed_rfd=0.031,
-         current_rfd=0.3,
+         New_rfd=00.06,
+         Previous_rfd=0.3,
          calc_method="Threshold",
          Pop_served=round(percent*population_served*Pop),
          assignment_method=ifelse(assignment_method=='gdb',"MassDEP DWP Well Viewer",assignment_method),
          assignment_method=ifelse(assignment_method=='service_maps',"PWS Service Maps",assignment_method))%>%
   distinct()%>%
-  select(town,assignment_method,method,calc_method,as_exposed,Age,Pop_served,ir_bw,dose,dose_nc,starts_with("cvd"),starts_with("ihd"),starts_with("fatal"),current_rfd,proposed_rfd,old_csf,combined_cancer_prob_95)%>%
+  select(town,assignment_method,method,calc_method,as_exposed,Age,Pop_served,ir_bw,dose,dose_nc,starts_with("cvd"),starts_with("ihd"),starts_with("fatal"),Previous_rfd,New_rfd,old_csf,combined_cancer_prob_95)%>%
 rbind(town_as_health_new%>%
   group_by(Method)%>%
   mutate(pop_percent=(Pop_served/sum(Pop_served)),
@@ -4202,15 +4690,19 @@ rbind(town_as_health_new%>%
          assignment_method=ifelse(assignment_method=='service_maps',"PWS Service Maps",assignment_method))%>%
   mutate(Method=fct_relevel(Method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average')),
          method=Method)%>%
-  select(town,assignment_method,method,calc_method,as_exposed,Age,Pop_served,ir_bw,dose,dose_nc,starts_with("cvd"),starts_with("ihd"),starts_with("fatal"),current_rfd,proposed_rfd,old_csf,combined_cancer_prob_95))
+  select(town,assignment_method,method,calc_method,as_exposed,Age,Pop_served,ir_bw,dose,dose_nc,starts_with("cvd"),starts_with("ihd"),starts_with("fatal"),Previous_rfd,New_rfd,old_csf,combined_cancer_prob_95))
 
 
 as_threshold_summary_rfd<-all_as_non_cancer%>%
   filter(calc_method=='Threshold')%>%
   group_by(method,assignment_method)%>%
   mutate(pop_percent=(Pop_served/sum(Pop_served)),
-         dose_nc=ifelse(dose_nc==0,0.0005,dose_nc))%>%
+         dose_nc=ifelse(dose_nc==0,0.00001,dose_nc))%>%
+  #view()
   ungroup()%>%
+  #pivot_wider(names_from = assignment_method,values_from = dose_nc)%>%
+  #view()
+  #filter(Method!='probability_maps')%>%
   mutate(method=ifelse(method=='int','Interpolated',method),
          method=ifelse(method=='town','Town Average',method),
          method=ifelse(method=='county','County Average',method),
@@ -4225,20 +4717,31 @@ as_threshold_summary_rfd<-all_as_non_cancer%>%
          `Assignment Method`=as.factor(assignment_method),
          `Assignment Method`=fct_relevel(`Assignment Method`,'SDWIS','PWS Service Maps','MassDEP DWP Well Viewer'))%>%
   distinct()%>%
+  filter(method!='Region Average')%>%
   group_by(`Assignment Method`,method)%>%
+  #view()
   summarise(users=sum(Pop_served,na.rm=T),
-            over_current_rfd=paste(prettyNum(round(sum(Pop_served[dose_nc>=current_rfd],na.rm=T)),big.mark=','),' (',(round(100*round(sum(Pop_served[dose_nc>=current_rfd],na.rm=T))/users,1)),"\\%)",sep=""),
-            over_proposed_rfd=paste(prettyNum(round(sum(Pop_served[dose_nc>=proposed_rfd],na.rm=T)),big.mark=','),' (',(round(100*round(sum(Pop_served[dose_nc>=proposed_rfd],na.rm=T))/users,1)),"\\%)",sep=""))%>%
+            over_Previous_rfd=paste(prettyNum(round(sum(Pop_served[dose_nc>=Previous_rfd],na.rm=T)),big.mark=','),' (',(round(100*round(sum(Pop_served[dose_nc>=Previous_rfd],na.rm=T))/users,1)),")",sep=""),
+            over_New_rfd=paste(prettyNum(round(sum(Pop_served[dose_nc>=New_rfd],na.rm=T)),big.mark=','),' (',(round(100*round(sum(Pop_served[dose_nc>=New_rfd],na.rm=T))/users,1)),")",sep=""))%>%
+  #pivot_wider(names_from = as_exposed,values_from = over)%>%
   mutate(users=prettyNum(users,big.mark=","))%>%
+  #mutate(`Assignment Method`=ifelse(Source=='CWS Average','SDWIS',`Assignment Method`))%>%
   distinct()%>%
   filter(method!="NTNC Average")
 
 write.csv(as_threshold_summary_rfd,"Tables\\as_threshold_summary_rfd.csv",quote = F,row.names = F)
+write.table(as_threshold_summary_rfd,"Tables\\as_threshold_summary_rfd.csv",quote = F,row.names = F,sep=";")
 
+as_threshold_summary_rfd%>%
+  filter(`Assignment Method`!='MassDEP DWP Well Viewer')%>%
+  ungroup()%>%
+  select(-`Assignment Method`)%>%
+  #write.csv("wells_manuscript\\as_threshold_summary_cut.csv",quote = F,row.names = F)
+  write.table("Tables\\as_threshold_summary_rfd_cut.csv",quote = F,row.names = F,sep=";")
 
 #Figure Generation
 library(scales)
-png("Data\\Figures\\as_nc_frd_value.png",width=12,height=8,res=300,units = "in")
+png("Figures\\as_nc_frd_value.png",width=12,height=6,res=300,units = "in")
 all_as_non_cancer%>%
   filter(calc_method!='Threshold')%>%
   group_by(method,assignment_method)%>%
@@ -4258,14 +4761,15 @@ all_as_non_cancer%>%
          `Assignment Method`=as.factor(assignment_method),
          `Assignment Method`=fct_relevel(`Assignment Method`,'SDWIS','PWS Service Maps','MassDEP DWP Well Viewer'))%>%
   filter(Source=='Private Well')%>%
+  filter(method!='Region Average')%>%
   distinct()%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = Pop_served,fill=`Assignment Method`),color='black',bins=30,position='identity')+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   #geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("goldenrod2","slategray3"))+
   scale_x_log10()+
@@ -4278,7 +4782,7 @@ all_as_non_cancer%>%
   theme(text=element_text(size = 16),legend.position = "top")
 dev.off()
 
-png("Data\\Figures\\as_nc_frd_thr.png",width=12,height=12,res=300,units = "in")
+png("Figures\\as_nc_frd_thr.png",width=12,height=12,res=300,units = "in")
 all_as_non_cancer%>%
   filter(calc_method=='Threshold')%>%
   group_by(method,assignment_method)%>%
@@ -4296,21 +4800,22 @@ all_as_non_cancer%>%
          method=ifelse(method=='probabilitymaps','Probability Maps',method),
          method=ifelse(method=='probabilitymapsli','Probability Maps (LCI)',method),
          method=ifelse(method=='probabilitymapsui','Probability Maps (UCI)',method),
-         )%>%
+  )%>%
   mutate(method=fct_relevel(method, c('CWS Average','NTNC Average','Interpolated','Town Average','County Average','Region Average','Probability Maps (LCI)','Probability Maps','Probability Maps (UCI)')),
          Source=ifelse(method=='CWS Average'|method=='NTNC Average','PWS','Private Well'),
          assignment_method=ifelse(method=='CWS Average'|method=='NTNC Average','SDWIS',assignment_method),
          `Assignment Method`=as.factor(assignment_method),
          `Assignment Method`=fct_relevel(`Assignment Method`,'SDWIS','PWS Service Maps','MassDEP DWP Well Viewer'))%>%
   filter(Source=='Private Well')%>%
+  filter(method!='Region Average')%>%
   distinct()%>%
   ggplot(aes(x = dose_nc)) + 
   geom_histogram(aes(weight = Pop_served,fill=`Assignment Method`),color='black',bins=20,position='identity')+
-  geom_vline(aes(xintercept = proposed_rfd,color="Proposed RfD"),size=1.2)+
-  geom_vline(aes(xintercept = current_rfd,color="Current RfD"),size=1.2)+
+  geom_vline(aes(xintercept = New_rfd,color="New RfD"),size=1.2)+
+  geom_vline(aes(xintercept = Previous_rfd,color="Previous RfD"),size=1.2)+
   #geom_text(data=labs,aes(y=0.39,x=0.001,label=n))+
   scale_colour_manual("", 
-                      breaks = c("Proposed RfD", "Current RfD"),
+                      breaks = c("New RfD", "Previous RfD"),
                       values = c("darkred", "darkblue")) +
   scale_fill_manual(values = c("goldenrod2","slategray3"))+
   scale_x_log10()+
@@ -4322,6 +4827,7 @@ all_as_non_cancer%>%
   theme_bw()+
   theme(text=element_text(size = 16),legend.position = "top")
 dev.off()
+
 
 #CVD----
 #CVD Figures based on equations from new IRIS Draft
@@ -4571,9 +5077,9 @@ dev.off()
 a<-town_as_health_new%>%
   filter(assignment_method!='service_maps')%>%
   mutate(dose_nc=ifelse(dose_nc==0,0.0001,dose_nc),
-         HQ_Current=dose_nc/current_rfd,
-         HQ_Proposed=dose_nc/proposed_rfd)%>%
-  pivot_longer(cols = c(HQ_Current,HQ_Proposed), names_to = c("HQ"),
+         HQ_Previous=dose_nc/Previous_rfd,
+         HQ_New=dose_nc/New_rfd)%>%
+  pivot_longer(cols = c(HQ_Previous,HQ_New), names_to = c("HQ"),
                names_pattern ="HQ_(.*)",values_to = "hq")%>%
   ungroup()%>%
   filter(Method!='probability_maps')%>%
@@ -4596,9 +5102,9 @@ a<-town_as_health_new%>%
 b<-town_as_health_new%>%
   filter(assignment_method!='gdb')%>%
   mutate(dose_nc=ifelse(dose_nc==0,0.0001,dose_nc),
-         HQ_Current=dose_nc/current_rfd,
-         HQ_Proposed=dose_nc/proposed_rfd)%>%
-  pivot_longer(cols = c(HQ_Current,HQ_Proposed), names_to = c("HQ"),
+         HQ_Previous=dose_nc/Previous_rfd,
+         HQ_New=dose_nc/New_rfd)%>%
+  pivot_longer(cols = c(HQ_Previous,HQ_New), names_to = c("HQ"),
                names_pattern ="HQ_(.*)",values_to = "hq")%>%
   ungroup()%>%
   filter(Method!='probability_maps')%>%
@@ -5043,13 +5549,13 @@ write.csv(export_as,"Tables\\as_town_summary.csv",row.names = F,quote = F)
 
 
 total_cancer_burden<-all_as_canc%>%
-  mutate(current_csf=paste(round(cumulative_cancer_cases_current_csf,1)," (",round(per_million_cancer_cases_Current_CSF,1),")",sep=""),
-         proposed_csf=paste(round(cumulative_cancer_cases_proposed_csf,1)," (",round(per_million_cancer_cases_Proposed_CSF,1),")",sep=""))%>%
+  mutate(Previous_csf=paste(round(cumulative_cancer_cases_Previous_csf,1)," (",round(per_million_cancer_cases_Previous_CSF,1),")",sep=""),
+         New_csf=paste(round(cumulative_cancer_cases_New_csf,1)," (",round(per_million_cancer_cases_New_CSF,1),")",sep=""))%>%
   select(-starts_with("per"),-starts_with("cumulative"),-Method2)%>%
   pivot_wider(names_from = `Calculation Method`,values_from = c(ends_with("csf")))%>%
   filter(!grepl("Confidence",method))%>%
   mutate(assignment_method=ifelse(method=="CWS Average"|method=="NTNC Average",'SDWIS',assignment_method))%>%
-  filter(method!="NTNC Average")%>%
+  filter(method!="NTNC Average"&method!="Region Average")%>%
   distinct()%>%
   mutate(pop=prettyNum(pop,big.mark=","))
 

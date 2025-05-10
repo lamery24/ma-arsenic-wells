@@ -14,7 +14,7 @@ options(scipen=999)
 #THIS FILE IS THE SENSITIVITY ANALYSIS USING THRESHOLD METHODS
 #Some of the code is commented out, which is the initial code which is very computationally extensice
 #The first time this code is run that should be uncommented to generate the initial file
-setwd()
+setwd('C:\\Users\\liama\\OneDrive - University of Massachusetts\\Amery MS Thesis\\Wells')
 
 pw_vs_pws<-read.xlsx("Data\\gw_pts.xlsx")
 
@@ -312,24 +312,24 @@ census_clean%>%
 #           select(-wells),all.x=T)%>%
 #   mutate(dose=1000*as_exposed*ir_bw*ef_cancer,
 #          dose_nc=1000*as_exposed*ir_bw,
-#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-#          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-#          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
+#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+#          lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+#          lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
 #          combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
 #          combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
-#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
+#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
 #          old_csf=dose*1.5/1000,
-#          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
-#          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
-#          fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
-#          fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
-#          ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
-#          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
-#          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
-#          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
+#          #cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
+#          #cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
+#          #fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
+#          #fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
+#          #ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
+#          #ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
+#          #fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
+#         # fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
 #          proposed_rfd=0.031,
 #          current_rfd=0.3,
 #          percent_treatment_lci=0,
@@ -345,11 +345,12 @@ census_clean%>%
 #   pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
 #                names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
 #   pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
-#                names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
+#                names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")#%>%
+# 
+# full_sensitivity_analysis<-full_sensitivity_analysis%>%
+#   select(-proposed_rfd,-current_rfd,-dose_nc,-town,-region,-old_csf)%>%
 #   pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
 #                names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
-# 
-# 
 # 
 # 
 # sensitivity_results<-full_sensitivity_analysis%>%
@@ -370,7 +371,7 @@ census_clean%>%
 #   mutate(cancer_burden=as.numeric(cancer_burden))
 # 
 # write.xlsx(sensitivity_results,"Data\\sensitivity_results.xlsx")
-# 
+
 # pws_arsenic_data<-read.csv("Data\\pws_arsenic_data.csv")
 # 
 # 
@@ -398,15 +399,15 @@ census_clean%>%
 # pws_sensitivity<-pws_sensitivity%>%
 #   mutate(dose=as_exposed*ir_bw*ef_cancer,
 #          dose_nc=as_exposed*ir_bw,
-#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-#          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-#          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
+#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+#          lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+#          lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
 #          combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
 #          combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
-#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
+#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
 #          old_csf=dose*1.5/1000,
 #          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
 #          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
@@ -426,12 +427,15 @@ census_clean%>%
 # 
 # pws_sensitivity<-pws_sensitivity%>%
 #   select(-starts_with("lung"),-starts_with("bladder"),-starts_with("cvd"),-starts_with("ihd"),-starts_with("fatal"))%>%
+#   select(-proposed_rfd,-current_rfd,-dose_nc,-town,-old_csf)%>%
 #   pivot_longer(cols = starts_with("percent_consuming"), names_to = c("confidence_percent_consuming"),
 #                names_pattern ="percent_consuming_(.*)",values_to = "percent_consuming")%>%
 #   pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
 #                names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
 #   pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
-#                names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
+#                names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")
+# 
+# pws_sensitivity<-pws_sensitivity%>%
 #   pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
 #                names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
 # 
@@ -881,149 +885,149 @@ dev.off()
 
 #The same analysis as above is done with the value-based analysis vs the threshold analysis
 
-# well_val_sens<-private_well_sensitivity%>%
-#   group_by(town,county,region)%>%
-#   summarise(wells=sum(!is.na(town)),
-#             as_int_lci=mean(as_int_lci),
-#             as_int_prob=mean(as_int_prob),
-#             as_int_uci=mean(as_int_uci),
-#             as_county_lci=mean(as_county_lci),
-#             as_county_prob=mean(as_county_prob),
-#             as_county_uci=mean(as_county_uci))%>%
-#   pivot_longer(cols = starts_with("as"), names_to = c("method","confidence_as_conc"),
-#                 names_pattern ="as_(.*)_(.*)",values_to = "as_conc")%>%
-#   filter(method=="int")%>%
-#   select(-wells)%>%
-#   merge(census_clean2,all=T)%>%
-#   mutate(dose=as_conc*ir_bw*ef_cancer,
-#          dose_nc=as_conc*ir_bw,
-#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-#          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-#          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-#          combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
-#          combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
-#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-#          old_csf=dose*1.5/1000,
-#          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
-#          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
-#          fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
-#          fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
-#          ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
-#          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
-#          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
-#          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-#          proposed_rfd=0.031,
-#          current_rfd=0.3,
-#          percent_treatment_lci=0,
-#          percent_treatment_mean=.4,
-#          percent_treatment_uci=.7,
-#          treatment_effectiveness_lci=.2,
-#          treatment_effectiveness_uci=0.99)%>%
-#     select(-starts_with("lung"),-starts_with("bladder"),-starts_with("cvd"),-starts_with("ihd"),-starts_with("fatal"))%>%
-#     pivot_longer(cols = starts_with("percent_consuming"), names_to = c("confidence_percent_consuming"),
-#                  names_pattern ="percent_consuming_(.*)",values_to = "percent_consuming")%>%
-#     pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
-#                  names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
-#     pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
-#                  names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
-#     pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
-#                  names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
-# 
-# well_sensitivity_val_results<-well_val_sens%>%
-#   group_by(confidence_ir,confidence_bw,confidence_as_conc,confidence_wells,confidence_percent_consuming,confidence_percent_treatment,confidence_treatment_effectiveness,confidence_combined_cancer)%>%
-#   summarise(cancer_burden=sum(wells*pop*combined_cancer*(percent_consuming*((percent_treatment)*(1-treatment_effectiveness)+(1-percent_treatment))),na.rm=T))
-# 
-# 
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('avg',"mean",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob_5',"lci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob_95',"uci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob',"avg",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('x5th',"lci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('x95th',"uci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('95th',"uci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('5th',"lci",x))
-# well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('avg',"mean",x))
-# 
-# well_sensitivity_val_results<-well_sensitivity_val_results%>%
-#   mutate(cancer_burden=as.numeric(cancer_burden))
-# 
-# write.xlsx(well_sensitivity_val_results,"Data\\well_sensitivity_val_results.xlsx")
-# 
-# 
+well_val_sens<-private_well_sensitivity%>%
+  group_by(town,county,region)%>%
+  summarise(wells=sum(!is.na(town)),
+            as_int_lci=mean(as_int_lci),
+            as_int_prob=mean(as_int_prob),
+            as_int_uci=mean(as_int_uci),
+            as_county_lci=mean(as_county_lci),
+            as_county_prob=mean(as_county_prob),
+            as_county_uci=mean(as_county_uci))%>%
+  pivot_longer(cols = starts_with("as"), names_to = c("method","confidence_as_conc"),
+                names_pattern ="as_(.*)_(.*)",values_to = "as_conc")%>%
+  filter(method=="int")%>%
+  select(-wells)%>%
+  merge(census_clean2,all=T)%>%
+  mutate(dose=as_conc*ir_bw*ef_cancer,
+         dose_nc=as_conc*ir_bw,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
+         combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         old_csf=dose*1.5/1000,
+         cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
+         cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
+         fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
+         fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
+         ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
+         ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
+         fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
+         fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
+         proposed_rfd=0.031,
+         current_rfd=0.3,
+         percent_treatment_lci=0,
+         percent_treatment_mean=.4,
+         percent_treatment_uci=.7,
+         treatment_effectiveness_lci=.2,
+         treatment_effectiveness_uci=0.99)%>%
+    select(-starts_with("lung"),-starts_with("bladder"),-starts_with("cvd"),-starts_with("ihd"),-starts_with("fatal"))%>%
+    pivot_longer(cols = starts_with("percent_consuming"), names_to = c("confidence_percent_consuming"),
+                 names_pattern ="percent_consuming_(.*)",values_to = "percent_consuming")%>%
+    pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
+                 names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
+    pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
+                 names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
+    pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
+                 names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
+
+well_sensitivity_val_results<-well_val_sens%>%
+  group_by(confidence_ir,confidence_bw,confidence_as_conc,confidence_wells,confidence_percent_consuming,confidence_percent_treatment,confidence_treatment_effectiveness,confidence_combined_cancer)%>%
+  summarise(cancer_burden=sum(wells*pop*combined_cancer*(percent_consuming*((percent_treatment)*(1-treatment_effectiveness)+(1-percent_treatment))),na.rm=T))
+
+
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('avg',"mean",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob_5',"lci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob_95',"uci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('prob',"avg",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('x5th',"lci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('x95th',"uci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('95th',"uci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('5th',"lci",x))
+well_sensitivity_val_results[]<-lapply(well_sensitivity_val_results,function(x) gsub('avg',"mean",x))
+
+well_sensitivity_val_results<-well_sensitivity_val_results%>%
+  mutate(cancer_burden=as.numeric(cancer_burden))
+
+write.xlsx(well_sensitivity_val_results,"Data\\well_sensitivity_val_results.xlsx")
+
+
 pws_arsenic_data<-read.csv("Data\\pws_arsenic_data.csv")%>%
   mutate(lci_result=ifelse(lci_result==0,0.0000500000,lci_result))
-# 
-# pws_sensitivity_val<-pws_arsenic_data%>%
-#   select(ends_with("result"),population_served_count,town)%>%
-#   pivot_longer(cols = ends_with("result"), names_to = c("confidence_as_conc"),
-#                names_pattern ="(.*)_result",values_to = "as_conc")%>%
-# group_by(town,confidence_as_conc)%>%
-#   summarise(population=sum(population_served_count),
-#              as_exposed=sum(population_served_count*as_conc)/sum(population_served_count))%>%
-#   merge(census_clean2,all=T)
-# 
-# pws_sensitivity_val<-pws_sensitivity_val%>%
-#   mutate(dose=1000*as_exposed*ir_bw*ef_cancer,
-#          dose_nc=1000*as_exposed*ir_bw,
-#          bladder_cancer_prob=ifelse(dose<0.22,dose*0.0061,0.0011*dose^2+0.0059*dose),
-#          bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.0003,dose*0.0003),
-#          bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0127,0.001*dose^3+0.0037*dose^2+0.0121*dose),
-#          lung_cancer_prob=ifelse(dose<0.22,dose*0.0186,0.003*dose^2+0.0181*dose),
-#          lung_cancer_prob_5=ifelse(dose<0.22,dose*0.0008,dose*0.0008),
-#          lung_cancer_prob_95=ifelse(dose<0.22,dose*0.0462,0.0041*dose^3+0.0152*dose^2+0.0437*dose),
-#          combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
-#          combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
-#          combined_cancer_prob_95=ifelse(dose<0.22,dose*0.053,dose*0.053),
-#          old_csf=dose*1.5/1000,
-#          cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
-#          cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
-#          fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
-#          fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
-#          ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
-#          ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
-#          fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
-#          fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
-#          proposed_rfd=0.031,
-#          current_rfd=0.3,
-#          percent_treatment_lci=0,
-#          percent_treatment_mean=.4,
-#          percent_treatment_uci=.7,
-#          treatment_effectiveness_lci=.2,
-#          treatment_effectiveness_uci=0.99)
-# 
-# pws_sensitivity_val<-pws_sensitivity_val%>%
-#   select(-starts_with("lung"),-starts_with("bladder"),-starts_with("cvd"),-starts_with("ihd"),-starts_with("fatal"))%>%
-#   pivot_longer(cols = starts_with("percent_consuming"), names_to = c("confidence_percent_consuming"),
-#                names_pattern ="percent_consuming_(.*)",values_to = "percent_consuming")%>%
-#   pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
-#                names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
-#   pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
-#                names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
-#   pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
-#                names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
-# 
-# pws_sensitivity_val_results<-pws_sensitivity_val%>%
-#   group_by(confidence_ir,confidence_bw,confidence_as_conc,confidence_percent_consuming,confidence_percent_treatment,confidence_treatment_effectiveness,confidence_combined_cancer)%>%
-#   summarise(cancer_burden=sum(pop*combined_cancer*(percent_consuming*((percent_treatment)*(1-treatment_effectiveness)+(1-percent_treatment))),na.rm=T))
-# 
-# 
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('avg',"mean",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob_5',"lci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob_95',"uci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob',"avg",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('x5th',"lci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('x95th',"uci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('95th',"uci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('5th',"lci",x))
-# pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('avg',"mean",x))
-# 
-# pws_sensitivity_val_results<-pws_sensitivity_val_results%>%
-#   mutate(cancer_burden=as.numeric(cancer_burden))
-# 
-# write.xlsx(pws_sensitivity_val_results,"Data\\pws_sensitivity_val_results.xlsx")
+
+pws_sensitivity_val<-pws_arsenic_data%>%
+  select(ends_with("result"),population_served_count,town)%>%
+  pivot_longer(cols = ends_with("result"), names_to = c("confidence_as_conc"),
+               names_pattern ="(.*)_result",values_to = "as_conc")%>%
+group_by(town,confidence_as_conc)%>%
+  summarise(population=sum(population_served_count),
+             as_exposed=sum(population_served_count*as_conc)/sum(population_served_count))%>%
+  merge(census_clean2,all=T)
+
+pws_sensitivity_val<-pws_sensitivity_val%>%
+  mutate(dose=1000*as_exposed*ir_bw*ef_cancer,
+         dose_nc=1000*as_exposed*ir_bw,
+         bladder_cancer_prob=ifelse(dose<0.22,dose*0.0062,0.0046*dose^2+dose*0.0053),
+         bladder_cancer_prob_5=ifelse(dose<0.22,dose*0.00006,.00001*dose^2+dose*.00007),
+         bladder_cancer_prob_95=ifelse(dose<0.22,dose*0.0177,0.0184*dose^2+0.0137*dose),
+         lung_cancer_prob=ifelse(dose<0.22,dose*0.0078,0.0025*dose^2+.0077*dose),
+         lung_cancer_prob_5=ifelse(dose<0.22,dose*.0002,dose^2*.00004+.0002*dose),
+         lung_cancer_prob_95=ifelse(dose<0.22,dose*.0214,0.0075*dose^2+0.0205*dose),
+         combined_cancer_prob_5=bladder_cancer_prob_5+lung_cancer_prob_5,
+         combined_cancer_prob=bladder_cancer_prob+lung_cancer_prob,
+         combined_cancer_prob_95=ifelse(dose<0.22,dose*0.0317,dose*0.0317),
+         old_csf=dose*1.5/1000,
+         cvd_extra_risk=-0.0078*dose_nc^2+0.1611*dose_nc,
+         cvd_extra_risk_95=-0.093*dose_nc^2+0.5434*dose_nc,
+         fatal_cvd_extra_risk=0.0039*dose_nc^2+0.039*dose_nc,
+         fatal_cvd_extra_risk_95=0.0362*dose_nc^2+0.1123*dose_nc,
+         ihd_extra_risk=0.0174*dose_nc^2+0.131*dose_nc,
+         ihd_extra_risk_95=0.0585*dose_nc^3-0.026*dose_nc^2+0.361*dose_nc,
+         fatal_ihd_extra_risk=0.0074*dose_nc^2+0.0325*dose_nc,
+         fatal_ihd_extra_risk_95=0.0127*dose_nc^3+0.05*dose_nc^2+0.0861*dose_nc,
+         proposed_rfd=0.031,
+         current_rfd=0.3,
+         percent_treatment_lci=0,
+         percent_treatment_mean=.4,
+         percent_treatment_uci=.7,
+         treatment_effectiveness_lci=.2,
+         treatment_effectiveness_uci=0.99)
+
+pws_sensitivity_val<-pws_sensitivity_val%>%
+  select(-starts_with("lung"),-starts_with("bladder"),-starts_with("cvd"),-starts_with("ihd"),-starts_with("fatal"))%>%
+  pivot_longer(cols = starts_with("percent_consuming"), names_to = c("confidence_percent_consuming"),
+               names_pattern ="percent_consuming_(.*)",values_to = "percent_consuming")%>%
+  pivot_longer(cols = starts_with("percent_treatment"), names_to = c("confidence_percent_treatment"),
+               names_pattern ="percent_treatment_(.*)",values_to = "percent_treatment")%>%
+  pivot_longer(cols = starts_with("treatment_effectiveness"), names_to = c("confidence_treatment_effectiveness"),
+               names_pattern ="treatment_effectiveness_(.*)",values_to = "treatment_effectiveness")%>%
+  pivot_longer(cols = starts_with("combined_cancer"), names_to = c("confidence_combined_cancer"),
+               names_pattern ="combined_cancer_(.*)",values_to = "combined_cancer")
+
+pws_sensitivity_val_results<-pws_sensitivity_val%>%
+  group_by(confidence_ir,confidence_bw,confidence_as_conc,confidence_percent_consuming,confidence_percent_treatment,confidence_treatment_effectiveness,confidence_combined_cancer)%>%
+  summarise(cancer_burden=sum(pop*combined_cancer*(percent_consuming*((percent_treatment)*(1-treatment_effectiveness)+(1-percent_treatment))),na.rm=T))
+
+
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('avg',"mean",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob_5',"lci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob_95',"uci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('prob',"avg",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('x5th',"lci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('x95th',"uci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('95th',"uci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('5th',"lci",x))
+pws_sensitivity_val_results[]<-lapply(pws_sensitivity_val_results,function(x) gsub('avg',"mean",x))
+
+pws_sensitivity_val_results<-pws_sensitivity_val_results%>%
+  mutate(cancer_burden=as.numeric(cancer_burden))
+
+write.xlsx(pws_sensitivity_val_results,"Data\\pws_sensitivity_val_results.xlsx")
 
 well_sensitivity_val_results<-read.xlsx("Data\\well_sensitivity_val_results.xlsx")%>%
   drop_na()
@@ -1586,18 +1590,18 @@ png("Data\\Figures\\combined_sens_anal.png",height = 7,width=14,res=300,units = 
 ggarrange(sens_anal,pws_sens_anal,labels = c("a) Private Wells","b) CWSs           "),ncol = 1,font.label = list(size=20),align = "hv",vjust = 17,hjust = .001)
 dev.off()
 
-pw1<-read.csv("Data\\private_wells_ci.csv")
+pw1<-read.csv("Tables\\private_wells_ci.csv")
 colnames(pw1)<-c("Variable","min_th","max_thr")
-pw2<-read.csv("Data\\well_ci_val.csv")
+pw2<-read.csv("Tables\\well_ci_val.csv")
 colnames(pw2)<-c("Variable","min_val","max_val")
 pw1%>%
   merge(pw2)%>%
   write.csv("Tables\\private_wells_ci_all.csv",row.names = F,quote = F)
 
 
-cws1<-read.csv("Data\\cws_ci.csv")
+cws1<-read.csv("Tables\\cws_ci.csv")
 colnames(cws1)<-c("Variable","min_th","max_thr")
-cws2<-read.csv("Data\\cws_ci_val.csv")
+cws2<-read.csv("Tables\\cws_ci_val.csv")
 colnames(cws2)<-c("Variable","min_val","max_val")
 cws1%>%
   merge(cws2)%>%
